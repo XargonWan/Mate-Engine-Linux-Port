@@ -586,14 +586,6 @@ MonoBehaviour:
     m_Localized: "L\xF6sche Chatverlauf"
     m_Metadata:
       m_Items: []
-  - m_Id: 82517517364486144
-    m_Localized: Sind Sie sich sicher?
-    m_Metadata:
-      m_Items: []
-  - m_Id: 82530239246360576
-    m_Localized: Verwenden Sie XMoveWindow.
-    m_Metadata:
-      m_Items: []
   references:
     version: 2
     RefIds: []

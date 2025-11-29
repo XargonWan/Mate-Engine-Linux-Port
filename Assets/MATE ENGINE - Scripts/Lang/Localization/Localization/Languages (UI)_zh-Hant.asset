@@ -533,14 +533,6 @@ MonoBehaviour:
     m_Localized: Del. CHAT HISTORY
     m_Metadata:
       m_Items: []
-  - m_Id: 82517517364486144
-    m_Localized: Are you sure?
-    m_Metadata:
-      m_Items: []
-  - m_Id: 82530239246360576
-    m_Localized: "\u4F7F\u7528 XMoveWindow"
-    m_Metadata:
-      m_Items: []
   references:
     version: 2
     RefIds: []

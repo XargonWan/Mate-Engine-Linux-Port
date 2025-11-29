@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using System;
-using UnityEngine.Serialization;
 
 public class SaveLoadHandler : MonoBehaviour
 {
@@ -53,8 +52,6 @@ public class SaveLoadHandler : MonoBehaviour
             limiter.ApplyFPSLimit();
         }
     }
-    
-    private static readonly object fileLock = new object();
 
     // Speichern
     public void SaveToDisk()
@@ -66,10 +63,7 @@ public class SaveLoadHandler : MonoBehaviour
                 Directory.CreateDirectory(dir);
 
             string json = JsonConvert.SerializeObject(data, Formatting.Indented);
-            lock (fileLock)
-            {
-                File.WriteAllText(FilePath, json);
-            }
+            File.WriteAllText(FilePath, json);
             Debug.Log("[SaveLoadHandler] Saved settings to: " + FilePath);
         }
         catch (Exception e)
@@ -171,7 +165,9 @@ public class SaveLoadHandler : MonoBehaviour
         public string selectedModelPath = "";
         public int contextLength = 4096;
         public bool enableHusbandoMode = false;
+        
         public bool useXMoveWindow = false;
+        public bool verboseDiscordRPCLog = false;
     }
 
     public static void SyncAllowedAppsToAllAvatars()

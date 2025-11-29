@@ -1,3 +1,5 @@
+using DiscordRPC.Logging;
+using Lachee.Discord.Control;
 using UnityEngine;
 using UnityEngine.UI;
 using X11;
@@ -20,6 +22,7 @@ public class SettingsHandlerToggles : MonoBehaviour
     public Toggle enableRandomMessagesToggle;
     public Toggle enableHusbandoModeToggle;
     public Toggle useXMoveWindowToggle;
+    public Toggle verboseDiscordRpcLogToggle;
 
     [Header("External Objects")]
     public GameObject bloomObject;
@@ -45,6 +48,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         enableRandomMessagesToggle?.onValueChanged.AddListener(OnEnableRandomMessagesChanged);
         enableHusbandoModeToggle?.onValueChanged.AddListener(OnEnableHusbandoModeChanged);
         useXMoveWindowToggle?.onValueChanged.AddListener(OnUseXMoveWindowToggleChanged);
+        verboseDiscordRpcLogToggle?.onValueChanged.AddListener(OnVerboseDiscordRpcLogChanged);
 
         LoadSettings();
         ApplySettings();
@@ -70,19 +74,11 @@ public class SettingsHandlerToggles : MonoBehaviour
         ApplySettings();
         Save();
     }
-    private void OnEnableHusbandoModeChanged(bool v)
-    {
-        SaveLoadHandler.Instance.data.enableHusbandoMode = v;
-        ApplySettings();
-        Save();
-    }
+    private void OnEnableHusbandoModeChanged(bool v) { SaveLoadHandler.Instance.data.enableHusbandoMode = v; Save(); }
     
-    private void OnUseXMoveWindowToggleChanged(bool v)
-    {
-        SaveLoadHandler.Instance.data.useXMoveWindow = v;
-        ApplySettings();
-        Save();
-    }
+    private void OnUseXMoveWindowToggleChanged(bool v) { SaveLoadHandler.Instance.data.useXMoveWindow = v; Save(); }
+    
+    private void OnVerboseDiscordRpcLogChanged(bool v) { SaveLoadHandler.Instance.data.verboseDiscordRPCLog = v; DiscordPresence.Instance.client.Logger = v ? new UnityLogger { Level = LogLevel.Trace } : new NullLogger(); Save(); }
 
     #endregion
 
@@ -104,6 +100,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         enableHusbandoModeToggle?.SetIsOnWithoutNotify(data.enableHusbandoMode);
         useXMoveWindowToggle?.SetIsOnWithoutNotify(data.useXMoveWindow);
         enableRandomMessagesToggle?.SetIsOnWithoutNotify(data.enableRandomMessages);
+        verboseDiscordRpcLogToggle?.SetIsOnWithoutNotify(data.verboseDiscordRPCLog);
         ApplySettings();
     }
 

@@ -585,14 +585,6 @@ MonoBehaviour:
     m_Localized: "\uCC44\uD305 \uAE30\uB85D \uC0AD\uC81C"
     m_Metadata:
       m_Items: []
-  - m_Id: 82517517364486144
-    m_Localized: "\uD655\uC2E4\uD574\uC694?"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 82530239246360576
-    m_Localized: "XMoveWindow \uC0AC\uC6A9"
-    m_Metadata:
-      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -56,29 +56,14 @@ public class TrayIndicator : MonoBehaviour
     
     [DllImport("libappindicator3")]
     private static extern void app_indicator_set_icon_full(IntPtr indicator, string icon_name, string icon_desc);
-    
-    [DllImport("libgobject-2.0")]
-    private static extern ulong g_signal_connect_data(IntPtr instance, 
-        string detailed_signal, 
-        IntPtr c_handler, 
-        IntPtr data, 
-        IntPtr destroy_data, 
-        uint connect_flags);
-
-    // Delegate matching GtkMenuItem::activate signature
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate void GtkMenuItemActivateDelegate(IntPtr menuItem, IntPtr userData);
 
     private IntPtr indicatorHandle;
     private Gtk.Menu menu;
-    private Gtk.MenuShell menuShell;
     private List<GCHandle> delegateHandles = new();
     
     #endregion
 
     public static TrayIndicator Instance;
-
-    private bool initialized;
     
     Dictionary<IntPtr, Action> MenuActions = new();
 
@@ -99,13 +84,15 @@ public class TrayIndicator : MonoBehaviour
             }
         }
     }
-
+    
     public void InitializeTrayIcon(string iconName)
     {
-        if (!initialized)
-            return;
+#if  UNITY_EDITOR
+        return;
+#endif
         // Create the indicator with a unique ID, normal icon name (use a theme icon like "applications-system"), and category
-        indicatorHandle = app_indicator_new(iconName, "applications-system", AppIndicatorCategory.ApplicationStatus);
+        indicatorHandle =
+            app_indicator_new(iconName, "applications-system", AppIndicatorCategory.ApplicationStatus);
 
         if (indicatorHandle == IntPtr.Zero)
         {
@@ -115,16 +102,19 @@ public class TrayIndicator : MonoBehaviour
 
         // Set to active status with normal icon
         app_indicator_set_status(indicatorHandle, AppIndicatorStatus.Active);
-#if  UNITY_EDITOR
-        app_indicator_set_icon_full(indicatorHandle, Application.dataPath + "/MATE ENGINE - Icons/DevICON_70x70.png", Application.productName);
+#if UNITY_EDITOR
+        app_indicator_set_icon_full(indicatorHandle,
+            Application.dataPath + "/MATE ENGINE - Icons/DevICON_70x70.png", Application.productName);
 #else
         app_indicator_set_icon_full(indicatorHandle, Application.dataPath + "/Resources/UnityPlayer.png", Application.productName);
 #endif
-        Application.runInBackground = true;
     }
 
     public void AddMenuItem(List<TrayMenuEntry> menuEntries)
     {
+        #if UNITY_EDITOR
+        return;
+        #endif
         CreateMenu(menuEntries);
     }
 
@@ -139,10 +129,7 @@ public class TrayIndicator : MonoBehaviour
 
     private void CreateMenu(List<TrayMenuEntry> menuEntries)
     {
-        if (!initialized)
-            return;
         menu = new Gtk.Menu();
-        menuShell = new Gtk.MenuShell(menu.Handle);
         if (menuEntries != null)
         {
             foreach (var entry in menuEntries)
@@ -150,7 +137,7 @@ public class TrayIndicator : MonoBehaviour
                 if (entry.Label == "Separator")
                 {
                     var separator = new Gtk.SeparatorMenuItem();
-                    menuShell.Append(separator);
+                    menu.Append(separator);
                     separator.Show();
                 }
                 else
@@ -164,14 +151,14 @@ public class TrayIndicator : MonoBehaviour
                         // Create toggle (check) menu item
                         checkMenuItem = new Gtk.CheckMenuItem(entry.Label);
                         checkMenuItem.Active = entry.InitialState;
-                        menuShell.Append(checkMenuItem);
+                        menu.Append(checkMenuItem);
                         checkMenuItem.Show();
                     }
                     else
                     {
                         // Regular menu item
                         menuItem = new Gtk.MenuItem(entry.Label);
-                        menuShell.Append(menuItem);
+                        menu.Append(menuItem);
                         menuItem.Show();
                     }
                     
@@ -221,6 +208,11 @@ public class TrayIndicator : MonoBehaviour
     private void CleanupMenu()
     {
         MenuActions.Clear();
+        if (menu != null)
+        {
+            menu.Dispose();
+            menu = null;
+        }
         foreach (var handle in delegateHandles)
         {
             if (handle.IsAllocated)

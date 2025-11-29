@@ -588,14 +588,6 @@ MonoBehaviour:
     m_Localized: Supprimer l'Historique de Discussion
     m_Metadata:
       m_Items: []
-  - m_Id: 82517517364486144
-    m_Localized: "\xCAtes-vous s\xFBr?"
-    m_Metadata:
-      m_Items: []
-  - m_Id: 82530239246360576
-    m_Localized: Utilisez XMoveWindow
-    m_Metadata:
-      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -1,4 +1,3 @@
-#if !UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,13 +48,16 @@ public static class EarlyEnvSet
     private static extern int XFree(IntPtr data);
     
     
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSplashScreen)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void InitBeforeAnything()
     {
+        #if UNITY_EDITOR
+        return;
+        #endif
         setenv("GDK_BACKEND", "x11", 0);
         setenv("NO_AT_BRIDGE", "1", 0);
         string[] argc = { };
-        if (!Init.Check(ref argc))
+        if (!Gtk.Application.InitCheck(string.Empty, ref argc))
         {
             throw new Exception("Gtk initialization failed.");
         }
@@ -64,7 +66,10 @@ public static class EarlyEnvSet
         {
             throw new Exception("Cannot open X11 display");
         }
-        CheckVisual(display, out IntPtr window);
+        if (!CheckVisual(display, out var window))
+        {
+            return;
+        }
         if (!IsCompositionSupported(display))
         {
             Gdk.Window unityWindow = GdkX11Helper.ForeignNewForDisplay(window);
@@ -82,7 +87,12 @@ public static class EarlyEnvSet
             image.Show();
             dialog.ContentArea?.PackStart(image, false, false, 0);
             dialog.ShowAll();
-            dialog.Run();
+            dialog.Response += (_, _) =>
+            {
+                dialog.Hide();
+                Gtk.Application.Quit();
+            };
+            Gtk.Application.Run();
         }
     }
     
@@ -98,7 +108,7 @@ public static class EarlyEnvSet
         return false;
     }
 
-    static void CheckVisual(IntPtr display, out IntPtr window)
+    static bool CheckVisual(IntPtr display, out IntPtr window)
     {
         int pid = Process.GetCurrentProcess().Id;
         List<IntPtr> windows = FindWindowsByPid(display, pid);
@@ -113,7 +123,7 @@ public static class EarlyEnvSet
         if (XGetWindowAttributes(display, unityWindow, out X11Manager.XWindowAttributes attrs) == 0)
         {
             Debug.LogError("Failed to get window attributes");
-            return;
+            return false;
         }
         
         if (attrs.depth != 32 || !IsArgbVisual(display, attrs.visual))
@@ -128,8 +138,17 @@ public static class EarlyEnvSet
             var dialog = new MessageDialog(dummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "It looks like MateEngine is not running under an ARGB visual.");
             dialog.SecondaryText = "MateEngine must rely on a true transparent canvas (aka ARGB visual) to show a transparent background. Without it, your avatar will display on a big black background.\n\nTo acquire an ARGB visual, try launching MateEngine using the launch script (usually called launch.sh) provided in MateEngine executable path.";
             dialog.MessageType = MessageType.Warning;
-            dialog.Run();
+            dialog.Show();
+            dialog.Response += (_, _) =>
+            {
+                dialog.Hide();
+                Gtk.Application.Quit();
+            };
+            Gtk.Application.Run();
+            return false;
         }
+
+        return true;
     }
     
     private static bool IsArgbVisual(IntPtr display, IntPtr visual)
@@ -295,4 +314,3 @@ public static class EarlyEnvSet
         return result;
     }
 }
-#endif

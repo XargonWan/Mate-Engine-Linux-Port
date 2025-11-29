@@ -519,14 +519,6 @@ MonoBehaviour:
     m_Key: BUTTON_DELETE_CHAT_HISTORY
     m_Metadata:
       m_Items: []
-  - m_Id: 82517517364486144
-    m_Key: GC_CONFIRM
-    m_Metadata:
-      m_Items: []
-  - m_Id: 82530239246360576
-    m_Key: OPTION_USEXMOVE
-    m_Metadata:
-      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
