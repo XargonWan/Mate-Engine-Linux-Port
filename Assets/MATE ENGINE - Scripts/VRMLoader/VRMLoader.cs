@@ -9,6 +9,7 @@ using System.Reflection;
 using UniVRM10;
 using System;
 using Gtk;
+using SFB;
 using X11;
 using Application = UnityEngine.Application;
 
@@ -58,31 +59,10 @@ public class VRMLoader : MonoBehaviour
 
         isLoading = true;
         X11Manager.Instance.SetTopmost(false);
-        Gdk.Window gdkWindow = GdkX11Helper.ForeignNewForDisplay(X11Manager.Instance.UnityWindow);
-        var dummyParent = new Window("");
-        dummyParent.Realize();
-        dummyParent.SkipTaskbarHint = true;
-        dummyParent.SkipPagerHint = true;
-        dummyParent.Decorated = false;
-        dummyParent.Window.Reparent(gdkWindow, 0, 0);
-        var dialog = new FileChooserDialog("Select Model File", dummyParent, FileChooserAction.Open, "Cancel", ResponseType.Cancel, "Open", ResponseType.Accept);
-        var filter = new FileFilter();
-        filter.Name = "Model Files";
-        filter.AddPattern("*.vrm");
-        filter.AddPattern("*.me");
-        filter.AddPattern("*.prefab");
-        dialog.AddFilter(filter);
-        dialog.ShowAll();
-        dialog.Response += (_, response) =>
-        {
-            dialog.Hide();
-            if (response.ResponseId == ResponseType.Accept)
-            {
-                string path = dialog.Filename;  // Selected file path
-                if (path.Length > 0 && !string.IsNullOrEmpty(path))
-                    LoadVRM(path);
-            }
-        };
+        var extensions = new[] { new ExtensionFilter("Model Files", "vrm", "me", "prefab") };
+        string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Model File", "", extensions, false);
+        if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
+            LoadVRM(paths[0]);
         X11Manager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
         
         isLoading = false;

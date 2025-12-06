@@ -110,7 +110,7 @@ namespace X11
             running = false;
             _shapingCts?.Cancel();
             _shapingCts?.Token.WaitHandle.WaitOne(500); // Brief wait; adjust timeout as needed (non-blocking in Unity)
-            yield return new WaitForSecondsRealtime(500);
+            yield return new WaitForEndOfFrame();
             if (_display != IntPtr.Zero)
             {
 #if UNITY_EDITOR
@@ -126,6 +126,7 @@ namespace X11
                 XSync(_display, false);
                 XCloseDisplay(_display);
                 _display = IntPtr.Zero;
+                ShowError("Goodbye!");
             }
             _shapingCts?.Dispose();
         }

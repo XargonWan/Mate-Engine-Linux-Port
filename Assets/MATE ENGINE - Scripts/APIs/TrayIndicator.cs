@@ -38,23 +38,25 @@ public class TrayIndicator : MonoBehaviour
         Active = 1,    // Visible with normal icon
         Attention = 2  // Visible with attention icon (e.g., blinking)
     }
+    
+    private const string LibraryName = "libayatana-appindicator3.so.1";
 
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern IntPtr app_indicator_new(string id, string icon_name, AppIndicatorCategory category);
 
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern void app_indicator_set_status(IntPtr indicator, AppIndicatorStatus status);
 
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern void app_indicator_set_icon(IntPtr indicator, string icon_name);
 
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern void app_indicator_set_attention_icon(IntPtr indicator, string attention_icon_name);
 
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern void app_indicator_set_menu(IntPtr indicator, IntPtr menu);
     
-    [DllImport("libappindicator3")]
+    [DllImport(LibraryName)]
     private static extern void app_indicator_set_icon_full(IntPtr indicator, string icon_name, string icon_desc);
 
     private IntPtr indicatorHandle;

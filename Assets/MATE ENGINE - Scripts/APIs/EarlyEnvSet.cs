@@ -70,16 +70,11 @@ public static class EarlyEnvSet
         {
             return;
         }
+
+        GtkX11Helper.Init(window);
         if (!IsCompositionSupported(display))
         {
-            Gdk.Window unityWindow = GdkX11Helper.ForeignNewForDisplay(window);
-            var dummyParent = new Window("");
-            dummyParent.Realize();
-            dummyParent.SkipTaskbarHint = true;
-            dummyParent.SkipPagerHint = true;
-            dummyParent.Decorated = false;
-            dummyParent.Window.Reparent(unityWindow, 0, 0);
-            var dialog = new MessageDialog(dummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "Composition is unavailable for this window manager.");
+            var dialog = new MessageDialog(GtkX11Helper.Instance.DummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "Composition is unavailable for this window manager.");
             dialog.SecondaryText = "A compositor is required for MateEngine to show a transparent background.\n\nIf you are running MateEngine on WMs that don't compose (like Openbox), try installing a compositing manager (such as picom) and configure it correctly, or simply switch to Mutter (GNOME), Xfwm4 (Xfce4) and other WMs which natively supports composition.\n\nIf you are running KWin (KDE), please make sure \"Allow applications to block compositing\" is turned off in KDE System Settings (It's in the compositor section of Display and Monitor).";
             dialog.MessageType = MessageType.Warning;
             var image = new Image(new Gdk.Pixbuf(Resources.Load<Texture2D>("KWinHint").EncodeToPNG()));
@@ -128,14 +123,7 @@ public static class EarlyEnvSet
         
         if (attrs.depth != 32 || !IsArgbVisual(display, attrs.visual))
         {
-            Gdk.Window gdkWindow = GdkX11Helper.ForeignNewForDisplay(unityWindow);
-            var dummyParent = new Window("");
-            dummyParent.Realize();
-            dummyParent.SkipTaskbarHint = true;
-            dummyParent.SkipPagerHint = true;
-            dummyParent.Decorated = false;
-            dummyParent.Window.Reparent(gdkWindow, 0, 0);
-            var dialog = new MessageDialog(dummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "It looks like MateEngine is not running under an ARGB visual.");
+            var dialog = new MessageDialog(GtkX11Helper.Instance.DummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "It looks like MateEngine is not running under an ARGB visual.");
             dialog.SecondaryText = "MateEngine must rely on a true transparent canvas (aka ARGB visual) to show a transparent background. Without it, your avatar will display on a big black background.\n\nTo acquire an ARGB visual, try launching MateEngine using the launch script (usually called launch.sh) provided in MateEngine executable path.";
             dialog.MessageType = MessageType.Warning;
             dialog.Show();
