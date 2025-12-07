@@ -41,6 +41,8 @@ public class AvatarMouseTracking : MonoBehaviour
     Vrm10Instance vrm10;
     int currStateHash, nextStateHash;
 
+    private Vector2 mouseExact;
+
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -118,6 +120,9 @@ public class AvatarMouseTracking : MonoBehaviour
         bool trans = animator.IsInTransition(0);
         if (trans) nextStateHash = next.shortNameHash;
         else { currStateHash = info.shortNameHash; nextStateHash = 0; }
+        var oriMouse = X11Manager.Instance.GetMousePosition();
+        var winPos = X11Manager.Instance.GetWindowPosition();
+        mouseExact = new Vector2(oriMouse.x - winPos.x, Screen.height - oriMouse.y + winPos.y);
 
         if (IsAllowed("Head")) DoHead();
         DoSpine();
@@ -141,10 +146,8 @@ public class AvatarMouseTracking : MonoBehaviour
 
     void DoHead()
     {
-        if (!headBone || !headDriver) return;
-        var oriMouse = X11Manager.Instance.GetMousePosition();
-        var winPos = X11Manager.Instance.GetWindowPosition();
-        var mouse = new Vector2(oriMouse.x - winPos.x, Screen.height - oriMouse.y + winPos.y);
+        if (!headBone || !headDriver) return; 
+        var mouse = mouseExact;
         var world = mainCam.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, mainCam.nearClipPlane));
         var dir = (world - headDriver.position).normalized;
         var localDir = headDriver.parent.InverseTransformDirection(dir);
@@ -177,7 +180,7 @@ public class AvatarMouseTracking : MonoBehaviour
 
     void DoEye()
     {
-        var mouse = X11Manager.Instance.GetMousePosition();
+        var mouse = mouseExact;
         var world = mainCam.ScreenToWorldPoint(new Vector3(mouse.x, mouse.y, mainCam.nearClipPlane));
         if (vrm10 && vrmLookAtTarget)
         {
