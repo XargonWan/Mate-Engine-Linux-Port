@@ -44,6 +44,8 @@ namespace X11
             Instance = this;
         }
 
+        private Vector2 lastPos;
+
         void Update()
         {
             if (isDragging)
@@ -51,7 +53,9 @@ namespace X11
                 var currentMousePos = GetMousePosition();
                 var delta = currentMousePos - initialMousePos;
                 var newPos = initialWindowPos + delta;
+                if (newPos == lastPos) return;
                 SetWindowPosition(newPos);
+                lastPos = newPos;
             }
         }
 
