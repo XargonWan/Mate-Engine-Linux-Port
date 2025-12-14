@@ -20,7 +20,7 @@ namespace X11
 
         private Vector2 initialMousePos;
         private Vector2 initialWindowPos;
-        public bool isDragging = false;
+        public bool isDragging;
 
         public IntPtr Display
         {
@@ -111,9 +111,6 @@ namespace X11
             _netWmStateMaxHorz = XInternAtom(_display, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
             _netWmStateMaxVert = XInternAtom(_display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
             _netWmWindowType = XInternAtom(_display, "_NET_WM_WINDOW_TYPE", false);
-            _netWmWindowTypeDesktop = XInternAtom(_display, "_NET_WM_WINDOW_TYPE_DESKTOP", false);
-            _netWmWindowTypeDock = XInternAtom(_display, "_NET_WM_WINDOW_TYPE_DOCK", false);
-            XShapeQueryExtension(_display, out _shapeEventBase, out _shapeErrorBase);  // For shape/transparency
         }
         
         private void ShowError(string error) => Debug.LogError(typeof(X11Manager) + ": " + error);
@@ -200,7 +197,7 @@ namespace X11
             }
         }
 
-        public void SetWindowPositionLegacy(Vector2 position)
+        private void SetWindowPositionLegacy(Vector2 position)
         {
             if (_display != IntPtr.Zero && _unityWindow != IntPtr.Zero)
             {
@@ -241,7 +238,7 @@ namespace X11
             }
 
             var resHandle = XRRGetScreenResources(_display, _rootWindow);
-            var res = Marshal.PtrToStructure<XRRScreenResources>(resHandle);
+            var res = Marshal.PtrToStructure<XrrScreenResources>(resHandle);
             
             if (res.noutput <= 0)
             {
@@ -253,7 +250,7 @@ namespace X11
             {
                 var output = Marshal.ReadIntPtr(res.outputs, i * IntPtr.Size);
                 var outInfoHandle = XRRGetOutputInfo(_display, resHandle, output);
-                var outInfo = Marshal.PtrToStructure<XRROutputInfo>(outInfoHandle);
+                var outInfo = Marshal.PtrToStructure<XrrOutputInfo>(outInfoHandle);
                 if (outInfo.connection == 0 || outInfo.crtc == IntPtr.Zero)  // Disconnected or no CRTC
                 {
                     XRRFreeOutputInfo(outInfoHandle);
@@ -261,7 +258,7 @@ namespace X11
                 }
 
                 var crtcInfoHandle = XRRGetCrtcInfo(_display, resHandle, outInfo.crtc);
-                var crtcInfo = Marshal.PtrToStructure<XRRCrtcInfo>(crtcInfoHandle);
+                var crtcInfo = Marshal.PtrToStructure<XrrCrtcInfo>(crtcInfoHandle);
                 if (crtcInfo.width == 0 || crtcInfo.height == 0)
                 {
                     XRRFreeCrtcInfo(crtcInfoHandle);
@@ -295,18 +292,6 @@ namespace X11
             XFree(prop);
             // Map to string (add XGetAtomName if needed)
             return XGetAtomName(_display, typeAtom);
-        }
-
-        public bool IsWindowTransparentOrClickThrough(IntPtr hwnd)  // Approx WS_EX_LAYERED/TRANSPARENT
-        {
-            // Check shape for input (click-through) or bounding shape != rect (transparent)
-            if (XShapeQueryExtents(_display, hwnd, out var boundingShaped, out _, out _, out _, out _, out _, out _, out _, out _, out _) != 0) return false;
-            if (boundingShaped == 1) return true;  // Non-rect shape implies transparency
-            // Check input shape (empty = click-through)
-            if (XShapeGetRectangles(_display, hwnd, ShapeInput, out _, out _, out var rects, out var nRects) != 0) return false;
-            var emptyInput = (nRects == 0);
-            if (rects != IntPtr.Zero) XFree(rects);
-            return emptyInput;
         }
 
         public Vector2 GetWindowSize()
@@ -456,7 +441,7 @@ namespace X11
             if (clientListAtom != IntPtr.Zero)
             {
                 var status = XGetWindowProperty(_display, _rootWindow, clientListAtom, 0, 1024, false, (IntPtr)XaWindow,
-                    out var actualType, out var actualFormat, out var nItems, out var bytesAfter, out var prop);
+                    out var actualType, out var actualFormat, out var nItems, out _, out var prop);
 
                 if (status == 0 && actualType == (IntPtr)XaWindow && actualFormat == 32 && prop != IntPtr.Zero)
                 {
@@ -590,8 +575,8 @@ namespace X11
             var motifHintsAtom = XInternAtom(_display, "_MOTIF_WM_HINTS", false);
             var hints = new XMotifWmHints
             {
-                flags = (IntPtr)MWM_HINTS_FLAGS,
-                decorations = (IntPtr)MWM_DECORATIONS_NONE,
+                flags = (IntPtr)MwmHintsFlags,
+                decorations = (IntPtr)MwmDecorationsNone,
                 functions = IntPtr.Zero,
                 input_mode = IntPtr.Zero,
                 status = IntPtr.Zero
@@ -616,24 +601,6 @@ namespace X11
         
         public bool IsDesktop(IntPtr hwnd) => GetWindowType(hwnd) == "_NET_WM_WINDOW_TYPE_DESKTOP";
         public bool IsDock(IntPtr hwnd) => GetWindowType(hwnd) == "_NET_WM_WINDOW_TYPE_DOCK";
-        
-        public bool IsAboveInZOrder(IntPtr above, IntPtr below)  // Approx: Check if 'above' is higher in stacking
-        {
-            if (above == below) return false;
-            // Use _NET_CLIENT_LIST_STACKING for top-level
-            var stackingAtom = XInternAtom(_display, "_NET_CLIENT_LIST_STACKING", false);
-            var status = XGetWindowProperty(_display, _rootWindow, stackingAtom, 0, 1024, false, (IntPtr)XaWindow, out _, out _, out var nItems, out _, out var prop);
-            if (status != 0 || prop == IntPtr.Zero) { if (prop != IntPtr.Zero) XFree(prop); return false; }
-            int idxAbove = -1, idxBelow = -1;
-            for (ulong i = 0; i < nItems; i++)
-            {
-                var w = Marshal.ReadIntPtr(prop, (int)i * IntPtr.Size);
-                if (w == above) idxAbove = (int)i;
-                if (w == below) idxBelow = (int)i;
-            }
-            XFree(prop);
-            return idxAbove > idxBelow;  // Higher index = topper
-        }
 
         public bool IsWindowMaximized(IntPtr hwnd)
         {
@@ -661,16 +628,16 @@ namespace X11
             // Check _NET_WM_STATE_FULLSCREEN
             if (_netWmState == IntPtr.Zero) return true;  // Fallback if no EWMH
             var status = XGetWindowProperty(_display, hwnd, _netWmState, 0, 1024, false, (IntPtr)XaAtom, out _, out _, out var nItems, out _, out var prop);
-            var isFS = false;
+            var isFs = false;
             if (status == 0 && prop != IntPtr.Zero && nItems > 0)
             {
                 for (ulong i = 0; i < nItems; i++)
                 {
-                    if (Marshal.ReadIntPtr(prop, (int)i * IntPtr.Size) == _netWmStateFullscreen) { isFS = true; break; }
+                    if (Marshal.ReadIntPtr(prop, (int)i * IntPtr.Size) == _netWmStateFullscreen) { isFs = true; break; }
                 }
                 XFree(prop);
             }
-            return isFS;
+            return isFs;
         }
         
         public bool IsWindowVisible(IntPtr window)
@@ -854,7 +821,7 @@ namespace X11
         {
             var mask = XCreatePixmap(display, XDefaultRootWindow(display), (uint)width, (uint)height, 1);
 
-            XGCValues gcValues = default;
+            XgcValues gcValues = default;
             gcValues.foreground = 1;
             var gc = XCreateGC(display, mask, GCForeground, ref gcValues);
 
@@ -866,23 +833,23 @@ namespace X11
 
         private IntPtr CreateShapeMask(IntPtr display, Image image)
         {
-            var mask = XCreatePixmap(display, XDefaultRootWindow(display), (uint)image.width, (uint)image.height, 1);
+            var mask = XCreatePixmap(display, XDefaultRootWindow(display), (uint)image.Width, (uint)image.Height, 1);
 
-            XGCValues gcValues = default;
+            XgcValues gcValues = default;
             gcValues.foreground = 0;
             gcValues.background = 0;
             var gc = XCreateGC(display, mask, GCForeground | GCBackground, ref gcValues);
 
-            XFillRectangle(display, mask, gc, 0, 0, (uint)image.width, (uint)image.height);
+            XFillRectangle(display, mask, gc, 0, 0, (uint)image.Width, (uint)image.Height);
 
             XSetForeground(display, gc, 1);
             
-            for (var y = 0; y < image.height; y++)
+            for (var y = 0; y < image.Height; y++)
             {
-                for (var x = 0; x < image.width; x++)
+                for (var x = 0; x < image.Width; x++)
                 {
-                    var idx = (y * image.width + x) * 4;
-                    if (image.data[idx + 3] > 0)
+                    var idx = (y * image.Width + x) * 4;
+                    if (image.Data[idx + 3] > 0)
                     {
                         XDrawPoint(display, mask, gc, x, y);
                     }
@@ -915,9 +882,9 @@ namespace X11
         private Image GetImageData(IntPtr xImagePtr, int width, int height)
         {
             Image image;
-            image.width = width;
-            image.height = height;
-            image.data = new byte[width * height * 4];
+            image.Width = width;
+            image.Height = height;
+            image.Data = new byte[width * height * 4];
 
             for (var y = 0; y < height; y++)
             {
@@ -925,10 +892,10 @@ namespace X11
                 {
                     var pixel = XGetPixel(xImagePtr, x, y);
                     var idx = (y * width + x) * 4;
-                    image.data[idx + 0] = (byte)((pixel >> 16) & 0xFF); // R
-                    image.data[idx + 1] = (byte)((pixel >> 8) & 0xFF); // G
-                    image.data[idx + 2] = (byte)(pixel & 0xFF); // B
-                    image.data[idx + 3] = (byte)((pixel >> 24) & 0xFF); // A
+                    image.Data[idx + 0] = (byte)((pixel >> 16) & 0xFF); // R
+                    image.Data[idx + 1] = (byte)((pixel >> 8) & 0xFF); // G
+                    image.Data[idx + 2] = (byte)(pixel & 0xFF); // B
+                    image.Data[idx + 3] = (byte)((pixel >> 24) & 0xFF); // A
                 }
             }
 
@@ -1027,8 +994,7 @@ namespace X11
         private IntPtr _unityWindow;
         private List<Rect> _monitors = new();
         private IntPtr _netWmState, _netWmStateFullscreen, _netWmStateMaxHorz, _netWmStateMaxVert;
-        private IntPtr _netWmWindowType, _netWmWindowTypeDesktop, _netWmWindowTypeDock;
-        private IntPtr _shapeEventBase, _shapeErrorBase;
+        private IntPtr _netWmWindowType;
 
         // X11 Constants
         private const int XaCardinal = 6;
@@ -1036,14 +1002,14 @@ namespace X11
         private const int IsViewable = 2;
         private const int XaWindow = 33;
         
-        private bool transparentInputEnabled = false;
+        private bool transparentInputEnabled;
         private int damageEventBase;
         private IntPtr damage = IntPtr.Zero;
         private bool running = true;
         private CancellationTokenSource _shapingCts = new();
         
-        private const long MWM_HINTS_FLAGS = 1L << 1; // Use decorations
-        private const long MWM_DECORATIONS_NONE = 0; // No decorations
+        private const long MwmHintsFlags = 1L << 1; // Use decorations
+        private const long MwmDecorationsNone = 0; // No decorations
         private const int PropModeReplace = 0;
 
         private const int ClientMessage = 33;
@@ -1117,15 +1083,6 @@ namespace X11
             public IntPtr res_class;
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct XTextProperty
-        {
-            public IntPtr value;
-            public IntPtr encoding;
-            public int format;
-            public ulong nItems;
-        }
-        
         [StructLayout(LayoutKind.Explicit)]
         private struct XEvent
         {
@@ -1236,7 +1193,7 @@ namespace X11
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct XGCValues
+        private struct XgcValues
         {
             public int function;
             public ulong plane_mask;
@@ -1265,8 +1222,8 @@ namespace X11
 
         private struct Image
         {
-            public byte[] data;
-            public int width, height;
+            public byte[] Data;
+            public int Width, Height;
         }
         
         [Serializable]
@@ -1325,7 +1282,7 @@ namespace X11
         }
         
         [StructLayout(LayoutKind.Sequential)]
-        private struct XRRScreenSize
+        private struct XrrScreenSize
         {
             public int width;
             public int height;
@@ -1334,7 +1291,7 @@ namespace X11
         }
         
         [StructLayout(LayoutKind.Sequential)]
-        private struct XRRScreenResources
+        private struct XrrScreenResources
         {
             public IntPtr timestamp;
             public IntPtr configTimestamp;
@@ -1347,7 +1304,7 @@ namespace X11
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct XRROutputInfo
+        private struct XrrOutputInfo
         {
             public IntPtr timestamp;
             public IntPtr crtc;         // XID of current CRTC, or None
@@ -1374,7 +1331,7 @@ namespace X11
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private struct XRRCrtcInfo
+        private struct XrrCrtcInfo
         {
             public IntPtr timestamp;
             public int x, y;            // absolute position of CRTC
@@ -1524,7 +1481,7 @@ namespace X11
             uint depth);
 
         [DllImport(LibX11)]
-        private static extern IntPtr XCreateGC(IntPtr display, IntPtr drawable, ulong valueMask, ref XGCValues values);
+        private static extern IntPtr XCreateGC(IntPtr display, IntPtr drawable, ulong valueMask, ref XgcValues values);
 
         [DllImport(LibX11)]
         private static extern int XSetForeground(IntPtr display, IntPtr gc, ulong foreground);
@@ -1544,7 +1501,7 @@ namespace X11
 
         [DllImport(LibX11)]
         private static extern IntPtr XGetImage(IntPtr display, IntPtr drawable, int x, int y, uint width, uint height,
-            ulong plane_mask, int format);
+            ulong planeMask, int format);
 
         [DllImport(LibX11)]
         private static extern int XDestroyImage(IntPtr xImage);
@@ -1559,7 +1516,7 @@ namespace X11
         private static extern int XPending(IntPtr display);
         
         [DllImport(LibXRandR)]
-        private static extern int XRRQueryExtension(IntPtr display, out IntPtr event_base, out IntPtr error_base);
+        private static extern int XRRQueryExtension(IntPtr display, out IntPtr eventBase, out IntPtr errorBase);
 
         [DllImport(LibXRandR)]
         private static extern int XRRQueryVersion(IntPtr display, out int major, out int minor);
@@ -1582,15 +1539,6 @@ namespace X11
         [DllImport(LibXRandR)]
         private static extern void XRRFreeCrtcInfo(IntPtr crtcInfo);
 
-        [DllImport(LibXExt)]
-        private static extern int XShapeQueryExtension(IntPtr display, out IntPtr event_base, out IntPtr error_base);
-        
-        [DllImport(LibXExt)]
-        private static extern int XShapeQueryExtents(IntPtr display, IntPtr window, out int bShaped, out int xbs, out int ybs, out uint widthBs, out uint heightBs, out int cShaped, out int xcs, out int ycs, out uint widthCs, out uint heightCs);
-        
-        [DllImport(LibXExt)]
-        private static extern int XShapeGetRectangles(IntPtr display, IntPtr window, int dest_kind, out int x_offset, out int y_offset, out IntPtr rectangles, out int n_rects);
-        
         [DllImport(LibX11)]
         private static extern string XGetAtomName(IntPtr display, IntPtr atom);
 

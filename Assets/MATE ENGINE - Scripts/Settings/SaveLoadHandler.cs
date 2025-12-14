@@ -14,6 +14,8 @@ public class SaveLoadHandler : MonoBehaviour
     private static string fileName = "settings.json";
     private static string customDataDir = null;
 
+    public bool safeMode;
+
     private string BaseDir => string.IsNullOrEmpty(customDataDir)
         ? Application.persistentDataPath
         : Path.Combine(Application.persistentDataPath, customDataDir);
@@ -31,7 +33,7 @@ public class SaveLoadHandler : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Kommandozeilen-Argumente lesen
+        // Kommandozeilen-Argumente lesen (Read command line arguments... Why are there German here?)
         var args = Environment.GetCommandLineArgs();
         for (int i = 0; i < args.Length; i++)
         {
@@ -40,6 +42,8 @@ public class SaveLoadHandler : MonoBehaviour
 
             if (args[i].Equals("--datadir", StringComparison.Ordinal) && i + 1 < args.Length)
                 customDataDir = args[i + 1].Trim('"');
+
+            safeMode = args[i].Equals("--safemode");
         }
 
         LoadFromDisk();
@@ -56,6 +60,7 @@ public class SaveLoadHandler : MonoBehaviour
     // Speichern
     public void SaveToDisk()
     {
+        if (safeMode) return;
         try
         {
             string dir = Path.GetDirectoryName(FilePath);
@@ -75,7 +80,7 @@ public class SaveLoadHandler : MonoBehaviour
     // Laden
     public void LoadFromDisk()
     {
-        if (File.Exists(FilePath))
+        if (File.Exists(FilePath) && !safeMode)
         {
             try
             {
@@ -91,6 +96,7 @@ public class SaveLoadHandler : MonoBehaviour
         }
         else
         {
+            if (safeMode) Debug.Log("[SaveLoadHandler] Entering Safe Mode...");
             data = new SettingsData();
         }
     }
@@ -168,6 +174,7 @@ public class SaveLoadHandler : MonoBehaviour
         
         public bool useXMoveWindow = false;
         public bool verboseDiscordRPCLog = false;
+        public bool enableAutoMemoryTrim = false;
     }
 
     public static void SyncAllowedAppsToAllAvatars()

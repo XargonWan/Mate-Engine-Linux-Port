@@ -394,143 +394,144 @@ MonoBehaviour:
     m_Metadata:
       m_Items: []
   - m_Id: 63722729174507520
-    m_Localized: Update
+    m_Localized: "\u66F4\u65B0"
     m_Metadata:
       m_Items: []
   - m_Id: 64079105226743808
-    m_Localized: "Kyaa~ put me down\u2026!!"
+    m_Localized: "\u54C8\u554A~ \u653E\u6211\u4E0B\u4F86\u2026!!"
     m_Metadata:
       m_Items: []
   - m_Id: 64086005318197248
-    m_Localized: "Don\u2019t lift me up like that, it\u2019s embarrassing~!"
+    m_Localized: "\u4E0D\u8981\u9019\u6A23\u628A\u6211\u8209\u9AD8\uFF0C\u9019\u5F88\u5C37\u5C2C~!"
     m_Metadata:
       m_Items: []
   - m_Id: 64086006849118208
-    m_Localized: "Please\u2026 set me gently back on the floor~"
+    m_Localized: "\u628A\u6211\u653E\u56DE\u5730\u4E0A~ \u62DC\u8A17\u5566\u2026"
     m_Metadata:
       m_Items: []
   - m_Id: 64086008195489792
-    m_Localized: "Kyaa! It\u2019s too high! Hey, let me down!"
+    m_Localized: "\u54C8\u554A! \u592A\u9AD8\u4E86! \u563F\uFF0C \u8B93\u6211\u4E0B\u53BB!"
     m_Metadata:
       m_Items: []
   - m_Id: 64086009676079104
-    m_Localized: ahhhhhhh..!!! >_<
+    m_Localized: "\u554A\u554A\u554A\u554A..!!! >_<"
     m_Metadata:
       m_Items: []
   - m_Id: 64086226806808576
-    m_Localized: "This isn\u2019t a princess carry~! Let me down~!"
+    m_Localized: "\u9019\u4E0D\u662F\u516C\u4E3B\u62B1~! \u8B93\u6211\u4E0B\u53BB~!"
     m_Metadata:
       m_Items: []
   - m_Id: 64086278308667392
-    m_Localized: Let me down!! >_<!!
+    m_Localized: "\u8B93\u6211\u4E0B\u53BB!! >_<!!"
     m_Metadata:
       m_Items: []
   - m_Id: 64086678092947456
-    m_Localized: Hehe, look at me spin~ am I cute?
+    m_Localized: "\u563B\u563B, \u770B\u6211\u65CB\u8F49~ \u6211\u53EF\u611B\u4E0D?"
     m_Metadata:
       m_Items: []
   - m_Id: 64086768543113216
-    m_Localized: Eee~ watch my moves, master~!
+    m_Localized: "Eee~ \u770B\u770B\u6211\u7684\u821E\u6B65\uFF0C \u4E3B\u4EBA~!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087092846698496
-    m_Localized: "Kyaa, I can\u2019t stop moving~ so fun!"
+    m_Localized: "\u54C8\u554A\uFF0C \u6211\u505C\u4E0D\u4E0B\u4F86\u4E86~ \u592A\u597D\u73A9\u5566!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087094838992896
-    m_Localized: "Ufufu~ I\u2019m your idol on stage now\u266A"
+    m_Localized: "\u547C\u547C~ \u6211\u662F\u4F60\u81FA\u4E0A\u7684\u5076\u50CF\u266A"
     m_Metadata:
       m_Items: []
   - m_Id: 64087097229746176
-    m_Localized: "Dance battle?! I\u2019ll never lose~!"
+    m_Localized: "\u821E\u8E48\u5C0D\u6C7A?! \u6211\u53EF\u4E0D\u6703\u8F38\u7684~!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087099624693760
-    m_Localized: Dance Dance Dance!! >_<
+    m_Localized: "\u4F86\u8DF3\u821E \u8DF3\u821E \u8DF3\u821E!! >_<"
     m_Metadata:
       m_Items: []
   - m_Id: 64087382320783360
-    m_Localized: Relaxing time~ finally a break!
+    m_Localized: "\u4F11\u606F\u6642\u9593~ \u7D42\u65BC\u80FD\u4F11\u606F\u4E86!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087412918231040
-    m_Localized: "Hehe, I\u2019ll just sit here and watch you work."
+    m_Localized: "\u563B\u563B\uFF0C \u90A3\u6211\u5C31\u5750\u5728\u9019\u88E1\u770B\u4F60\u5DE5\u4F5C\u5427\u3002"
     m_Metadata:
       m_Items: []
   - m_Id: 64087414772113408
-    m_Localized: "Mmm\u2026 comfy spot, don\u2019t mind me~"
+    m_Localized: "\u55EF\u2026 \u8212\u670D\u7684\u5730\u65B9\uFF0C \u4E0D\u7528\u7BA1\u6211~"
     m_Metadata:
       m_Items: []
   - m_Id: 64087416336588800
-    m_Localized: "I\u2019ll cheer for you while you\u2019re busy, master~!"
+    m_Localized: "\u5728\u4F60\u5FD9\u7684\u6642\u5019\u6211\u6703\u5728\u65C1\u908A\u70BA\u4F60\u52A0\u6CB9\uFF0C\u4E3B\u4EBA~!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087417628434432
-    m_Localized: "Nyaa~ I\u2019ll stay here quietly, promise~"
+    m_Localized: "Nyaa~ \u6211\u7B54\u61C9~\u6211\u6703\u5B89\u975C\u7684\u5F85\u5728\u9019\u88E1!"
     m_Metadata:
       m_Items: []
   - m_Id: 64087418794450944
-    m_Localized: "Working hard? I\u2019ll keep you company~"
+    m_Localized: "\u5DE5\u4F5C\u5F88\u8F9B\u82E6\u561B? \u6211\u6703\u966A\u4F60~"
     m_Metadata:
       m_Items: []
   - m_Id: 64088019687219200
-    m_Localized: "Shhh\u2026 don\u2019t disturb me, I\u2019m recharging cuteness~"
+    m_Localized: "\u5653\u2026 \u5225\u6253\u64FE\u6211\uFF0C\u6211\u7684\u53EF\u611B\u5728\u5145\u80FD~"
     m_Metadata:
       m_Items: []
   - m_Id: 64088020911955968
-    m_Localized: Every pet deserves a macaron nap spot, right?
+    m_Localized: "\u6BCF\u500B\u5BF5\u7269\u90FD\u9700\u8981\u4E00\u584A\u99AC\u5361\u9F8D\u4F86\u5348\u89BA\uFF0C\u5C0D\u5427?"
     m_Metadata:
       m_Items: []
   - m_Id: 64088021570461696
-    m_Localized: "Ehehe~ my pillow smells like sugar\u2026 so dreamy~"
+    m_Localized: "\u563B\u563B\u563B~ \u6211\u7684\u6795\u982D\u805E\u8D77\u4F86\u50CF\u7CD6\u679C\u2026
+      \u597D\u5922\u5E7B~"
     m_Metadata:
       m_Items: []
   - m_Id: 64088022228967424
-    m_Localized: "So soft\u2026 I\u2019m melting into it~"
+    m_Localized: "\u597D\u8EDF\u2026 \u6211\u8981\u878D\u5316\u4E86~"
     m_Metadata:
       m_Items: []
   - m_Id: 64088022841335808
-    m_Localized: Sweet dreams on a sweet pillow, ehehe~
+    m_Localized: "\u9999\u751C\u7684\u5922\u5728\u9999\u751C\u7684\u6795\u982D\u4E0A\uFF0C\u563B\u563B~"
     m_Metadata:
       m_Items: []
   - m_Id: 64088023474675712
-    m_Localized: "Mmm\u2026 this macaron is so fluffy~ I could nap forever\u2026"
+    m_Localized: "\u55EF\u2026 \u9019\u99AC\u5361\u9F8D\u597D\u8EDF~ \u6211\u53EF\u4EE5\u6C38\u9060\u7761\u5728\u9019\u88E1\u2026"
     m_Metadata:
       m_Items: []
   - m_Id: 64485837908254720
-    m_Localized: Sakura Halo
+    m_Localized: "\u6AFB\u82B1\u5708"
     m_Metadata:
       m_Items: []
   - m_Id: 64485839854411776
-    m_Localized: Retro Halo
+    m_Localized: "\u5FA9\u53E4\u5149\u74B0"
     m_Metadata:
       m_Items: []
   - m_Id: 64485841104314368
-    m_Localized: Event Based Messages
+    m_Localized: "\u53CD\u61C9\u5F0F\u8A0A\u606F"
     m_Metadata:
       m_Items: []
   - m_Id: 64486049066295296
-    m_Localized: Enable Dance transitions
+    m_Localized: "\u555F\u7528\u821E\u8E48\u8F49\u5834"
     m_Metadata:
       m_Items: []
   - m_Id: 64486115202080768
-    m_Localized: Dance Change Time
+    m_Localized: "\u821E\u8E48\u8B8A\u5316\u6642\u9593"
     m_Metadata:
       m_Items: []
   - m_Id: 64486115827032064
-    m_Localized: Dance transition Time
+    m_Localized: "\u821E\u8E48\u8F49\u5834\u6642\u9593"
     m_Metadata:
       m_Items: []
   - m_Id: 64486267505647616
-    m_Localized: Start With System
+    m_Localized: "\u958B\u6A5F\u6642\u555F\u52D5"
     m_Metadata:
       m_Items: []
   - m_Id: 64486353119780864
-    m_Localized: AI System Prompt
+    m_Localized: "AI\u7CFB\u7D71\u63D0\u793A"
     m_Metadata:
       m_Items: []
   - m_Id: 64486586960617472
-    m_Localized: Del. CHAT HISTORY
+    m_Localized: "\u6E05\u9664\u804A\u5929\u7D00\u9304"
     m_Metadata:
       m_Items: []
   references:

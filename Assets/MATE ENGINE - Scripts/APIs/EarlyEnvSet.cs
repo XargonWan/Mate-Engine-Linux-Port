@@ -70,8 +70,7 @@ public static class EarlyEnvSet
         {
             return;
         }
-
-        GtkX11Helper.Init(window);
+        
         if (!IsCompositionSupported(display))
         {
             var dialog = new MessageDialog(GtkX11Helper.Instance.DummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "Composition is unavailable for this window manager.");
@@ -120,7 +119,7 @@ public static class EarlyEnvSet
             Debug.LogError("Failed to get window attributes");
             return false;
         }
-        
+        GtkX11Helper.Init(window);
         if (attrs.depth != 32 || !IsArgbVisual(display, attrs.visual))
         {
             var dialog = new MessageDialog(GtkX11Helper.Instance.DummyParent, DialogFlags.DestroyWithParent, MessageType.Warning, ButtonsType.Ok, false, "It looks like MateEngine is not running under an ARGB visual.");

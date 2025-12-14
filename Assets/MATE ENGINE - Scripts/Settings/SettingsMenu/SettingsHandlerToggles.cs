@@ -23,6 +23,7 @@ public class SettingsHandlerToggles : MonoBehaviour
     public Toggle enableHusbandoModeToggle;
     public Toggle useXMoveWindowToggle;
     public Toggle verboseDiscordRpcLogToggle;
+    public Toggle enableAutoMemoryTrimToggle;
 
     [Header("External Objects")]
     public GameObject bloomObject;
@@ -49,6 +50,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         enableHusbandoModeToggle?.onValueChanged.AddListener(OnEnableHusbandoModeChanged);
         useXMoveWindowToggle?.onValueChanged.AddListener(OnUseXMoveWindowToggleChanged);
         verboseDiscordRpcLogToggle?.onValueChanged.AddListener(OnVerboseDiscordRpcLogChanged);
+        enableAutoMemoryTrimToggle?.onValueChanged.AddListener(OnEnableAutoMemoryTrimChanged);
 
         LoadSettings();
         ApplySettings();
@@ -79,6 +81,8 @@ public class SettingsHandlerToggles : MonoBehaviour
     private void OnUseXMoveWindowToggleChanged(bool v) { SaveLoadHandler.Instance.data.useXMoveWindow = v; Save(); }
     
     private void OnVerboseDiscordRpcLogChanged(bool v) { SaveLoadHandler.Instance.data.verboseDiscordRPCLog = v; DiscordPresence.Instance.client.Logger = v ? new UnityLogger { Level = LogLevel.Trace } : new NullLogger(); Save(); }
+    
+    private void OnEnableAutoMemoryTrimChanged(bool v) { SaveLoadHandler.Instance.data.enableAutoMemoryTrim = v; ApplySettings(); Save(); }
 
     #endregion
 
@@ -101,6 +105,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         useXMoveWindowToggle?.SetIsOnWithoutNotify(data.useXMoveWindow);
         enableRandomMessagesToggle?.SetIsOnWithoutNotify(data.enableRandomMessages);
         verboseDiscordRpcLogToggle?.SetIsOnWithoutNotify(data.verboseDiscordRPCLog);
+        enableAutoMemoryTrimToggle?.SetIsOnWithoutNotify(data.enableAutoMemoryTrim);
         ApplySettings();
     }
 
@@ -122,6 +127,9 @@ public class SettingsHandlerToggles : MonoBehaviour
                 arm.StopAllCoroutines();
             }
         }
+        
+        foreach (var mt in Resources.FindObjectsOfTypeAll<MemoryTrim>())
+            mt.SetAutoTrimEnabled(data.enableAutoMemoryTrim);
 
         // Visuals
         if (bloomObject) bloomObject.SetActive(data.bloom);
@@ -162,6 +170,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         enableHusbandoModeToggle?.SetIsOnWithoutNotify(false);
         useXMoveWindowToggle?.SetIsOnWithoutNotify(false);
         verboseDiscordRpcLogToggle?.SetIsOnWithoutNotify(false);
+        enableAutoMemoryTrimToggle?.SetIsOnWithoutNotify(false);
 
         var data = SaveLoadHandler.Instance.data;
         data.enableDancing = true;
@@ -180,6 +189,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         data.enableHusbandoMode = false;
         data.useXMoveWindow = false;
         data.verboseDiscordRPCLog = false;
+        data.enableAutoMemoryTrim = false;
 
         SaveLoadHandler.Instance.SaveToDisk();
         ApplySettings();
