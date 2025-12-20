@@ -26,16 +26,17 @@ public class GtkX11Helper
             UnityEngine.Debug.LogError("Trying to create multiple Gtk instances.");
             return;
         }
+
         Instance = new GtkX11Helper
         {
-            gdkWindow = ForeignNewForDisplay(window),
             DummyParent = new Gtk.Window("")
         };
         Instance.DummyParent.Realize();
         Instance.DummyParent.SkipTaskbarHint = true;
         Instance.DummyParent.SkipPagerHint = true;
         Instance.DummyParent.Decorated = false;
-        Instance.DummyParent.Window.Reparent(Instance.gdkWindow, 0, 0);
+        Instance.gdkWindow = ForeignNewForDisplay(window);
+        Instance.DummyParent.Window.TransientFor = Instance.gdkWindow; 
     }
 
     public static Window ForeignNewForDisplay(IntPtr x11WindowXid)

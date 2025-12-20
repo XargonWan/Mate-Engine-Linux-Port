@@ -27,7 +27,8 @@ public class LinuxSpecificSettings : MonoBehaviour
         window = new Window(UnityEngine.Application.productName)
         {
             Resizable = false,
-            WindowPosition = WindowPosition.Center
+            WindowPosition = WindowPosition.Center,
+            TransientFor = GtkX11Helper.Instance.DummyParent
         };
         window.SetDefaultSize(660, 520);
         window.Destroyed += (s, e) =>
@@ -83,7 +84,8 @@ public class LinuxSpecificSettings : MonoBehaviour
         {
             Markup = "<span size=\"x-large\" weight=\"bold\">Linux-Specific Settings</span>"
         };
-        title.SetAlignment(0.0f, 0.5f);
+        title.Xalign = 0.0f;
+        title.Yalign = 0.5f;
         contentBox.PackStart(title, false, false, 0);
         
         var card = new Frame { Name = "card", ShadowType = ShadowType.None };
@@ -95,23 +97,24 @@ public class LinuxSpecificSettings : MonoBehaviour
         {
             LineWrap = true
         };
-        intro.SetAlignment(0.0f, 0.5f);
+        intro.Xalign = 0.0f;
+        intro.Yalign = 0.5f;
         cardBox.PackStart(intro, false, false, 0);
         
-        var check1 = new CheckButton("Use XMoveWindow instead of _NET_MOVERESIZE_WINDOW");
-        check1.UseUnderline = false;
-        ((Label)check1.Child).SetAlignment(0.0f, 0.5f);
+        var check1 = new CheckButton("Use XMoveWindow instead of _NET_MOVERESIZE_WINDOW") {Active = SaveLoadHandler.Instance.data.useXMoveWindow, UseUnderline = false};
+        ((Label)check1.Child).Xalign = 0.0f;
+        ((Label)check1.Child).Yalign = 0.5f;
         cardBox.PackStart(check1, false, false, 0);
 
         var desc1 = CreateDescriptionLabel("XMoveWindow bypasses WM and updates the window’s origin directly, which can leave window decorations out of sync. _NET_MOVERESIZE_WINDOW protocol sends a message to ask WM to move MateEngine window as a complete, decorated unit on every modern Linux desktop while respecting the user’s compositor animations and tiling rules.\n\nOnly use XMoveWindow in case that you cannot drag and move your avatar at all.");
-        desc1.UseUnderline = false;
         cardBox.PackStart(desc1, false, false, 0);
         
-        var check2 = new CheckButton("Enable Periodic Memory Optimization");
-        ((Label)check2.Child).SetAlignment(0.0f, 0.5f);
+        var check2 = new CheckButton("Enable Periodic Memory Optimization") {Active = SaveLoadHandler.Instance.data.enableAutoMemoryTrim, UseUnderline = false};
+        ((Label)check2.Child).Xalign = 0.0f;
+        ((Label)check2.Child).Yalign = 0.5f;
         cardBox.PackStart(check2, false, false, 0);
 
-        var desc2 = CreateDescriptionLabel("This feature reduces the game's physical RAM usage by releasing inactive memory pages and returning freed heap memory to the system. It proactively frees RAM for better multitasking on low-memory devices.\n\nNote: To safely preserve modified data, some pages may be temporarily written to swap space (virtual memory on disk). This can cause a short-term increase in swap usage, but the data reloads quickly if needed. Minor hitches may occur if frequently accessed data is reloaded.\n\nRecommended for systems with 16GB RAM or less.");
+        var desc2 = CreateDescriptionLabel("This feature reduces MateEngine's physical RAM usage by releasing inactive memory pages and returning freed heap memory to the system. It proactively frees RAM for better multitasking on low-memory devices.\n\nNote: To safely preserve modified data, some pages may be temporarily written to swap space (virtual memory on disk). This can cause a short-term increase in swap usage, but the data reloads quickly if needed. Minor hitches may occur if frequently accessed data is reloaded.\n\nRecommended for systems with 16GB RAM or less. Require at least 1 GiB swap space.");
         cardBox.PackStart(desc2, false, false, 0);
         
         var buttonBox = new Box(Orientation.Horizontal, 20) { Halign = Align.End };
@@ -121,11 +124,11 @@ public class LinuxSpecificSettings : MonoBehaviour
         var continueBtn = new Button("Save");
         continueBtn.StyleContext.AddClass("suggested-action");
 
-        backBtn.Clicked += (s, e) =>
+        backBtn.Clicked += (_, _) =>
         {
             ShowWindow(false);
         };
-        continueBtn.Clicked += (s, e) =>
+        continueBtn.Clicked += (_, _) =>
         {
             ShowWindow(false);
             SaveLoadHandler.Instance.data.useXMoveWindow = check1.Active;
@@ -164,9 +167,11 @@ public class LinuxSpecificSettings : MonoBehaviour
         {
             LineWrap = true,
             MaxWidthChars = 60,
-            LineWrapMode = Pango.WrapMode.WordChar
+            LineWrapMode = Pango.WrapMode.WordChar,
+            UseUnderline = false
         };
-        label.SetAlignment(0.0f, 0.5f);
+        label.Xalign = 0.0f;
+        label.Yalign = 0.5f;
         label.StyleContext.AddClass("description-label");
         return label;
     }
@@ -219,12 +224,12 @@ public class LinuxSpecificSettings : MonoBehaviour
 
         GUILayout.Space(20f);
         
-        useXMoveWindow = GUILayout.Toggle(useXMoveWindow, "Use XMoveWindow instead of _NET_MOVERESIZE_WINDOW");
+        useXMoveWindow = GUILayout.Toggle(SaveLoadHandler.Instance.data.useXMoveWindow, "Use XMoveWindow instead of _NET_MOVERESIZE_WINDOW");
         GUILayout.Label("XMoveWindow bypasses WM and updates the window’s origin directly, which can leave window decorations out of sync. _NET_MOVERESIZE_WINDOW protocol sends a message to ask WM to move MateEngine window as a complete, decorated unit on every modern Linux desktop while respecting the user’s compositor animations and tiling rules.\n\nOnly use XMoveWindow in case that you cannot drag and move your avatar at all.");
 
         GUILayout.Space(10f);
         
-        enableAutoMemoryTrim = GUILayout.Toggle(enableAutoMemoryTrim, "Enable Periodic Memory Optimization");
+        enableAutoMemoryTrim = GUILayout.Toggle(SaveLoadHandler.Instance.data.enableAutoMemoryTrim, "Enable Periodic Memory Optimization");
         GUILayout.Label("This feature reduces the game's physical RAM usage by releasing inactive memory pages and returning freed heap memory to the system. It proactively frees RAM for better multitasking on low-memory devices.\n\nNote: To safely preserve modified data, some pages may be temporarily written to swap space (virtual memory on disk). This can cause a short-term increase in swap usage, but the data reloads quickly if needed. Minor hitches may occur if frequently accessed data is reloaded.\n\nRecommended for systems with 16GB RAM or less.");
 
         GUILayout.FlexibleSpace();
@@ -245,8 +250,6 @@ public class LinuxSpecificSettings : MonoBehaviour
         GUILayout.EndHorizontal();
 
         GUILayout.EndVertical();
-
-        GUILayout.EndHorizontal();
 
         GUI.DragWindow();
     }

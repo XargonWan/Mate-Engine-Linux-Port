@@ -6,6 +6,12 @@
 
 ## English
 
+> [!IMPORTANT]
+> I'm currently a high school student, with studies coming first!
+> Responses to issues/PRs, frequency of releasing may be slow (usually 1-4 weeks).
+> Feel free to submit PRs to help fix bugs or discuss in Discussions.
+> Thanks for your understanding and support! 🚀
+
 # Mate-Engine-Linux-Port
 This is an **unofficial** Linux port of shinyflvre's MateEngine - A free Desktop Mate alternative with a lightweight interface and custom VRM support.
 Tested on Ubuntu 24.04 LTS.
@@ -18,6 +24,7 @@ Simply grab a prebuilt one in [Releases](https://github.com/Marksonthegamer/Mate
 ### Requirements
 - A common GNU/Linux distro
 - A common X11 desktop environment which supports compositing (such as KDE, Xfce, GNOME, etc.)
+- At least 1 GiB of swap space (optional)
 - `libpulse` and `pipewire-pulse` (if you are using Pipewire as audio server)
 - `libgtk-3-dev libglib2.0-dev libayatana-appindicator`
 - `libx11-6 libxext6 libxrender1 libxdamage1`
@@ -45,14 +52,14 @@ Note that if you use GNOME, you will need [AppIndicator and KStatusNotifierItem 
 - Model visuals, alarm, screensaver, Chibi mode (they always work, any external libraries are not required for them)
 - Transparent background with cutoff
 - Set window always on top
-- Dancing (PulseAudio or Pipewire-Pulse for audio program detection)
-- AI Chat (require `Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`)
+- Dancing (experimental, require `pulseaudio` or `pipewire-pulse` for audio program detection)
+- AI Chat (require `Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`, case-sensitive)
 - Mouse tracking (hand holding and eyes tracking)
 - Discord RPC
 - Custom VRM importing
 - Simplified Chinese localization
-- Event-based Messages (Experimental)
-- Lower RAM usage than Windows version (Release 2.2.5)
+- Event-based Messages
+- Lower RAM usage than Windows version (Memory trimming enabled)
 
 ![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/RAMComparition.png)
 
@@ -61,6 +68,7 @@ Note that if you use GNOME, you will need [AppIndicator and KStatusNotifierItem 
 - Crashes at low system performance (`pa_mainloop_iterate`)
 - Limited window moving in Mutter (GNOME)
 - PulseAudio sometimes returns an empty audio program name
+- Mods do not load correctly
 
 ### Removed
 - Steam API (no workshop support)
@@ -72,6 +80,13 @@ This project lacks further testing and updates. Feel free to make PRs to contrib
 ---
 
 ## 中文
+
+> [!IMPORTANT]
+> 我是高二学生，学业很忙！
+> Issues/PR 回复与版本发布较慢，欢迎提交 PR 或去 Discussions 讨论。谢谢理解！
+
+> [!NOTE]
+> 项目仍在维护，但优先级在高考前会降低。
 
 # Mate-Engine-Linux-Port
 这是一个非官方的MateEngine Linux移植版 - 一个免费的Desktop Mate替代品（桌宠软件），具有轻量级界面和自定义VRM支持。
@@ -85,6 +100,7 @@ This project lacks further testing and updates. Feel free to make PRs to contrib
 ### 系统要求
 - 一个常见的 GNU/Linux 发行版
 - 一个常见的 X11 桌面环境，支持显示特效合成（compositing） ，比如KDE，Xfce，GNOME等
+- 至少 1 GiB 的交换空间（可选）
 - `libpulse-dev` 和 `pipewire-pulse` (如果你在用 Pipewire 作为音频服务器)
 - `libgtk-3-dev libglib2.0-dev libappindicator3-dev`
 - `libx11-6 libxext6 libxrender1 libxdamage1`
@@ -113,14 +129,14 @@ sudo pacman -S libpulse gtk3 glib2 libx11 libxext libxrender libxdamage libayata
 - 模型视觉效果、闹钟、屏保、Q版模式（它们不需要任何外部库，因此始终工作）
 - 带 Cutoff 的透明背景
 - 窗口置顶
-- 跳舞（PulseAudio或Pipewire-Pulse用于音频程序检测）
-- AI聊天（需要`Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`）
+- 跳舞（实验性，需要PulseAudio或Pipewire-Pulse用于音频程序检测）
+- AI聊天（需要`Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`，文件名区分大小写）
 - 鼠标跟踪（手持和眼睛跟踪）
 - Discord RPC
 - 自定义 VRM 模型导入
 - 简体中文版汉化
-- 基于事件的提示信息（实验性）
-- 与 Windows 版相比，使用更少内存（Release 2.2.5）
+- 基于事件的提示信息
+- 与 Windows 版相比，使用更少内存（已启用内存削减）
 
 ![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/RAMComparition.png)
 
@@ -129,6 +145,7 @@ sudo pacman -S libpulse gtk3 glib2 libx11 libxext libxrender libxdamage libayata
 - 系统性能较低时崩溃（`pa_mainloop_iterate`）
 - Mutter 合成器（GNOME）中窗口的移动范围有限
 - PulseAudio有时会返回空的音频程序名称
+- Mod 不会正常加载
 
 ### 已删除
 - Steam API (无创意工坊支持)

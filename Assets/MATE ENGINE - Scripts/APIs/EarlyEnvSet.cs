@@ -54,7 +54,6 @@ public static class EarlyEnvSet
         #if UNITY_EDITOR
         return;
         #endif
-        setenv("GDK_BACKEND", "x11", 0);
         setenv("NO_AT_BRIDGE", "1", 0);
         string[] argc = { };
         if (!Gtk.Application.InitCheck(string.Empty, ref argc))
@@ -114,7 +113,7 @@ public static class EarlyEnvSet
             unityWindow = windows[0]; // Typically the first is the main window
         }
         window = unityWindow;
-        if (XGetWindowAttributes(display, unityWindow, out X11Manager.XWindowAttributes attrs) == 0)
+        if (XGetWindowAttributes(display, unityWindow, out var attrs) == 0)
         {
             Debug.LogError("Failed to get window attributes");
             return false;

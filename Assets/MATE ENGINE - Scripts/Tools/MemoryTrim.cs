@@ -18,7 +18,7 @@ public class MemoryTrim : MonoBehaviour
     private static extern int malloc_trim(int pad);
 
     private static MemoryTrim _instance;
-    public static MemoryTrim Instance => _instance ??= FindObjectOfType<MemoryTrim>();
+    public static MemoryTrim Instance => _instance ??= FindFirstObjectByType<MemoryTrim>();
 
     public void SetAutoTrimEnabled(bool enabled)
     {
