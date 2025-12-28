@@ -78,7 +78,7 @@ public class AvatarBigScreenHandler : MonoBehaviour
             originalFOV = MainCamera.fieldOfView;
             originalOrthoSize = MainCamera.orthographicSize;
         }
-        if (unityHWND != IntPtr.Zero && X11Manager.Instance.GetWindowRect(unityHWND, out Rect r))
+        if (unityHWND != IntPtr.Zero && X11Manager.Instance.GetWindowRect(out Rect r))
         {
             originalWindowRect = r;
             originalRectSet = true;
@@ -310,7 +310,7 @@ public class AvatarBigScreenHandler : MonoBehaviour
 
         if (toFadeY && unityHWND != IntPtr.Zero)
         {
-            if (X11Manager.Instance.GetWindowRect(unityHWND, out Rect windowRect))
+            if (X11Manager.Instance.GetWindowRect(out Rect windowRect))
             {
                 Rect targetScreen = FindBestMonitorRect(windowRect);
                 X11Manager.Instance.SetWindowPosition(targetScreen.x, targetScreen.y);

@@ -2,9 +2,9 @@ using System;
 using UnityEngine;
 using System.Diagnostics;
 
-public class WaylandUtility
+public static class WaylandUtility
 {
-    public Vector2 GetWindowPositionKWin()
+    public static Vector2 GetWindowPositionKWin()
     {
         string output = RunCommand(Application.streamingAssetsPath + "/kdotool search --name 'MateEngineX' getwindowgeometry");
         string[] lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -18,7 +18,7 @@ public class WaylandUtility
         return Vector2.zero;
     }
 
-    string RunCommand(string command)
+    static string RunCommand(string command)
     {
         ProcessStartInfo psi = new ProcessStartInfo()
         {
@@ -29,10 +29,8 @@ public class WaylandUtility
             CreateNoWindow = true
         };
 
-        using (Process p = Process.Start(psi))
-        {
-            p.WaitForExit();
-            return p.StandardOutput.ReadToEnd();
-        }
+        using Process p = Process.Start(psi);
+        p?.WaitForExit();
+        return p?.StandardOutput.ReadToEnd();
     }
 }

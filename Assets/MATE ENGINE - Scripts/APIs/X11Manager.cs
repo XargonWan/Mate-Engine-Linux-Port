@@ -11,6 +11,7 @@ using UnityEngine.EventSystems;
 using Debug = UnityEngine.Debug;
 using Unity.Burst;
 using Unity.Collections;
+using UnityEngine.SceneManagement;
 
 namespace X11
 {
@@ -136,7 +137,6 @@ namespace X11
                 XSync(_display, false);
                 XCloseDisplay(_display);
                 _display = IntPtr.Zero;
-                ShowError("Goodbye!");
             }
             _shapingCts?.Dispose();
         }
@@ -165,11 +165,12 @@ namespace X11
 
         public void SetWindowPosition(Vector2 position)
         {
-            if (SaveLoadHandler.Instance.data.useXMoveWindow)
-            {
-                SetWindowPositionLegacy(position);
-                return;
-            }
+            if (!SceneManager.GetActiveScene().name.Contains("Test"))
+                if (SaveLoadHandler.Instance.data.useXMoveWindow)
+                {
+                    SetWindowPositionLegacy(position);
+                    return;
+                }
             if (_display != IntPtr.Zero && _unityWindow != IntPtr.Zero)
             {
                 var atom = XInternAtom(_display, "_NET_MOVERESIZE_WINDOW", true);
@@ -294,11 +295,13 @@ namespace X11
             return XGetAtomName(_display, typeAtom);
         }
 
-        public Vector2 GetWindowSize()
+        public Vector2 GetWindowSize(IntPtr window = default)
         {
-            if (_display != IntPtr.Zero && _unityWindow != IntPtr.Zero)
+            if (window == IntPtr.Zero)
+                window = _unityWindow;
+            if (_display != IntPtr.Zero && window != IntPtr.Zero)
             {
-                var result = XGetWindowAttributes(_display, _unityWindow, out var attributes);
+                var result = XGetWindowAttributes(_display, window, out var attributes);
                 if (result != 0) // Non-zero indicates success in X11
                 {
                     return new Vector2(attributes.width, attributes.height);
@@ -484,6 +487,11 @@ namespace X11
                     }
                 }
             }
+        }
+
+        public bool GetWindowRect(out Rect rect)
+        {
+            return GetWindowRect(_unityWindow, out rect);
         }
 
         public bool GetWindowRect(IntPtr window, out Rect rect)

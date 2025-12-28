@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using UnityEngine.UI;
 using X11;
 
 public class SettingsMenuPosition : MonoBehaviour
@@ -69,8 +68,7 @@ public class SettingsMenuPosition : MonoBehaviour
         if (checkTimer < step) return;
         checkTimer = 0f;
 
-        Rect winRect;
-        if (!X11Manager.Instance.GetWindowRect(X11Manager.Instance.UnityWindow, out winRect)) return;
+        if (!X11Manager.Instance.GetWindowRect(out var winRect)) return;
 
         Rect screen = monitorRects.Count > 0 ? GetBestMonitor(winRect) : new Rect(0, 0, Screen.currentResolution.width, Screen.currentResolution.height);
 
@@ -96,8 +94,8 @@ public class SettingsMenuPosition : MonoBehaviour
 
     void RefreshMonitors()
     {
-        X11.X11Manager.Instance.QueryMonitors();
-        monitorRects = X11.X11Manager.Instance.GetAllMonitors();
+        X11Manager.Instance.QueryMonitors();
+        monitorRects = X11Manager.Instance.GetAllMonitors();
     }
 
     Rect GetBestMonitor(Rect win)
