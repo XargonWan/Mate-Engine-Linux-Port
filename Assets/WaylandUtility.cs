@@ -11,7 +11,7 @@ public class WaylandUtility
     }
 
     public static Vector2 SetWindowPositionHyprland(Vector2 position){
-        RunCommand($"/usr/bin/hyprctl dispatch movewindowpixel exact {(position.x - (Screen.width/2))} {(position.y - (Screen.height/2))},title:MateEngineX"); //! When testing, the title is Game, in deploy is MateEngineX
+        RunCommand($"/usr/bin/hyprctl dispatch moveactive exact {(position.x - (Screen.width/2))} {(position.y - (Screen.height/2))}");
         return position;
     }
 
