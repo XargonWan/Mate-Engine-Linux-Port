@@ -11,6 +11,8 @@ using UnityEngine.EventSystems;
 using Debug = UnityEngine.Debug;
 using Unity.Burst;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
+using Unity.Jobs;
 using UnityEngine.SceneManagement;
 
 namespace X11
@@ -99,6 +101,7 @@ namespace X11
 
         private void Init()
         {
+            XInitThreads();
             // Open X11 display
             _display = XOpenDisplay(null);
             if (_display == IntPtr.Zero)
@@ -839,52 +842,62 @@ namespace X11
             return mask;
         }
 
-        private IntPtr CreateShapeMask(IntPtr display, Image image)
+        private IntPtr CreateShapeMaskFromNative(int width, int height, NativeArray<byte> alphaMap)
         {
-            var mask = XCreatePixmap(display, XDefaultRootWindow(display), (uint)image.Width, (uint)image.Height, 1);
-
+            var mask = XCreatePixmap(_display, _rootWindow, (uint)width, (uint)height, 1);
             XgcValues gcValues = default;
             gcValues.foreground = 0;
-            gcValues.background = 0;
-            var gc = XCreateGC(display, mask, GCForeground | GCBackground, ref gcValues);
+            var gc = XCreateGC(_display, mask, GCForeground, ref gcValues);
 
-            XFillRectangle(display, mask, gc, 0, 0, (uint)image.Width, (uint)image.Height);
+            XFillRectangle(_display, mask, gc, 0, 0, (uint)width, (uint)height);
+            XSetForeground(_display, gc, 1);
 
-            XSetForeground(display, gc, 1);
-            
-            for (var y = 0; y < image.Height; y++)
+            for (int y = 0; y < height; y++)
             {
-                for (var x = 0; x < image.Width; x++)
+                for (int x = 0; x < width; x++)
                 {
-                    var idx = (y * image.Width + x) * 4;
-                    if (image.Data[idx + 3] > 0)
+                    if (alphaMap[y * width + x] == 1)
                     {
-                        XDrawPoint(display, mask, gc, x, y);
+                        XDrawPoint(_display, mask, gc, x, y);
                     }
                 }
             }
 
-            XFreeGC(display, gc);
+            XFreeGC(_display, gc);
             return mask;
         }
 
         private void UpdateInputMask(int width, int height)
         {
-            if (isDragging || !running)
-                return;
-            var xImagePtr = XGetImage(_display, _unityWindow, 0, 0, (uint)width, (uint)height, AllPlanes, ZPixmap);
-            if (xImagePtr == IntPtr.Zero)
+            unsafe
             {
-                ShowError("Failed to get image from window");
-                return;
+                if (isDragging || !running)
+                    return;
+            
+                if (_shapingStopwatch.IsRunning && _shapingStopwatch.ElapsedMilliseconds < ShapingThrottleMs)
+                    return;
+
+                _shapingStopwatch.Restart();
+
+                var xImagePtr = XGetImage(_display, _unityWindow, 0, 0, (uint)width, (uint)height, AllPlanes, ZPixmap);
+                if (xImagePtr == IntPtr.Zero) return;
+            
+                var xImage = Marshal.PtrToStructure<XImage_Internal>(xImagePtr);
+                int totalPixels = width * height;
+            
+                var rawPixels = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<uint>((void*)xImage.data, totalPixels, Allocator.None);
+                var alphaMap = new NativeArray<byte>(totalPixels, Allocator.TempJob);
+            
+                var job = new ProcessPixelsJob { RawPixels = rawPixels, AlphaMap = alphaMap };
+                job.Schedule(totalPixels, 64).Complete();
+            
+                var mask = CreateShapeMaskFromNative(width, height, alphaMap);
+                XShapeCombineMask(_display, _unityWindow, ShapeInput, 0, 0, mask, ShapeSet);
+            
+                XFreePixmap(_display, mask);
+                XDestroyImage(xImagePtr);
+                alphaMap.Dispose();
             }
-
-            var image = GetImageData(xImagePtr, width, height);
-            XDestroyImage(xImagePtr);
-
-            var mask = CreateShapeMask(_display, image);
-            XShapeCombineMask(_display, _unityWindow, ShapeInput, 0, 0, mask, ShapeSet);
-            XFreePixmap(_display, mask);
         }
 
         private Image GetImageData(IntPtr xImagePtr, int width, int height)
@@ -947,7 +960,6 @@ namespace X11
                                     XFreePixmap(_display, fullMask);
 
                                     UpdateInputMask(width, height);
-                                    QueryMonitors();
                                 }
                                 break;
                             }
@@ -995,6 +1007,23 @@ namespace X11
         }
         #endregion
         
+        [BurstCompile]
+        private struct ProcessPixelsJob : IJobParallelFor
+        {
+            [ReadOnly] public NativeArray<uint> RawPixels;
+            [WriteOnly] public NativeArray<byte> AlphaMap;
+
+            public void Execute(int index)
+            {
+                // Extract Alpha from ARGB (assuming 32-bit depth)
+                // Adjust the shift (24) based on your X11 visual byte order
+                uint pixel = RawPixels[index];
+                byte alpha = (byte)((pixel >> 24) & 0xFF); 
+        
+                AlphaMap[index] = (byte)(alpha > 0 ? 1 : 0);
+            }
+        }
+        
         #region API
 
         private IntPtr _display;
@@ -1015,6 +1044,8 @@ namespace X11
         private IntPtr damage = IntPtr.Zero;
         private bool running = true;
         private CancellationTokenSource _shapingCts = new();
+        private Stopwatch _shapingStopwatch = new();
+        private const long ShapingThrottleMs = 100;
         
         private const long MwmHintsFlags = 1L << 1; // Use decorations
         private const long MwmDecorationsNone = 0; // No decorations
@@ -1290,12 +1321,20 @@ namespace X11
         }
         
         [StructLayout(LayoutKind.Sequential)]
-        private struct XrrScreenSize
+        private struct XImage_Internal
         {
-            public int width;
-            public int height;
-            public int mwidth;
-            public int mheight;
+            public int width, height;
+            public int xoffset;
+            public int format;
+            public IntPtr data; // Pointer to the raw pixel buffer
+            public int byte_order;
+            public int bitmap_unit;
+            public int bitmap_bit_order;
+            public int bitmap_pad;
+            public int depth;
+            public int bytes_per_line;
+            public int bits_per_pixel;
+            // ... other fields exist but these are sufficient
         }
         
         [StructLayout(LayoutKind.Sequential)]
@@ -1363,7 +1402,10 @@ namespace X11
             ReflectY  = 1 << 5
         }
         
-        // X11 Library imports
+        // X11 Library imports  
+        [DllImport(LibX11)]
+        private static extern int XInitThreads();
+        
         [DllImport(LibX11)]
         private static extern IntPtr XOpenDisplay(string displayName);
 
