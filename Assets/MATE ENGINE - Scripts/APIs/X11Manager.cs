@@ -20,6 +20,7 @@ namespace X11
     public class X11Manager : MonoBehaviour, IPointerDownHandler, IPointerUpHandler
     {
         public static X11Manager Instance;
+        bool is_hyprland;
 
         private Vector2 initialMousePos;
         private Vector2 initialWindowPos;
@@ -45,6 +46,7 @@ namespace X11
         private void OnEnable()
         {
             Instance = this;
+             is_hyprland = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP") == "Hyprland";
         }
 
         private Vector2 lastPos;
@@ -53,6 +55,13 @@ namespace X11
         {
             if (isDragging)
             {
+                if (is_hyprland){
+                    var current = WaylandUtility.GetMousePositionHyprland();
+                    if (current == lastPos) return;
+                    SetWindowPosition(current);
+                    lastPos = current;
+                    return;
+                }
                 var currentMousePos = GetMousePosition();
                 var delta = currentMousePos - initialMousePos;
                 var newPos = initialWindowPos + delta;
@@ -176,6 +185,10 @@ namespace X11
                 }
             if (_display != IntPtr.Zero && _unityWindow != IntPtr.Zero)
             {
+                if (is_hyprland){
+                WaylandUtility.SetWindowPositionHyprland(position);
+                return;
+                }
                 var atom = XInternAtom(_display, "_NET_MOVERESIZE_WINDOW", true);
                 if (atom == IntPtr.Zero)
                 {
