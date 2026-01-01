@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using X11;
 
 public class AvatarSwayController : MonoBehaviour
 {
@@ -72,9 +71,9 @@ public class AvatarSwayController : MonoBehaviour
     void Start()
     {
         draggingHash = Animator.StringToHash(draggingParam);
-        prevMousePos = X11Manager.Instance.GetMousePosition();
-        hwnd = X11Manager.Instance.UnityWindow;
-        if (hwnd != IntPtr.Zero) prevWinPos = X11Manager.Instance.GetWindowPosition();
+        prevMousePos = WindowManager.Instance.GetMousePosition();
+        hwnd = WindowManager.Instance.UnityWindow;
+        if (hwnd != IntPtr.Zero) prevWinPos = WindowManager.Instance.GetWindowPosition();
     }
 
     void Update()
@@ -91,7 +90,7 @@ public class AvatarSwayController : MonoBehaviour
         
         if (useWindowVelocity && hwnd != IntPtr.Zero)
         {
-            Vector2 wp = X11Manager.Instance.GetWindowPosition();
+            Vector2 wp = WindowManager.Instance.GetWindowPosition();
             Vector2 d = wp - prevWinPos;
             prevWinPos = wp;
             delta = new Vector2(d.x, d.y);
@@ -99,14 +98,14 @@ public class AvatarSwayController : MonoBehaviour
         
         if (delta == Vector2.zero && fallbackToMouse && dragging)
         {
-            Vector2 m = X11Manager.Instance.GetMousePosition();
+            Vector2 m = WindowManager.Instance.GetMousePosition();
             Vector2 md = (m - prevMousePos) * mouseSensitivity;
             prevMousePos = m;
             delta = md;
         }
         else
         {
-            prevMousePos = X11Manager.Instance.GetMousePosition();
+            prevMousePos = WindowManager.Instance.GetMousePosition();
         }
 
         filteredDelta = Vector2.Lerp(filteredDelta, delta, 1f - Mathf.Exp(-12f * dt));

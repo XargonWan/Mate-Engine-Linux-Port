@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using X11;
 
 public class SettingsMenuPosition : MonoBehaviour
 {
@@ -34,9 +33,9 @@ public class SettingsMenuPosition : MonoBehaviour
 
     void Start()
     {
-        if (X11Manager.Instance == null)
+        if (WindowManager.Instance == null)
         {
-            Debug.LogError("X11Manager.Instance is null. SettingsMenuPosition requires X11Manager to be present.");
+            Debug.LogError("WindowManager.Instance is null. SettingsMenuPosition requires WindowManager to be present.");
             enabled = false;
             return;
         }
@@ -54,7 +53,7 @@ public class SettingsMenuPosition : MonoBehaviour
 
     void Update()
     {
-        if (X11Manager.Instance == null || X11Manager.Instance.Display == IntPtr.Zero) return;
+        if (WindowManager.Instance == null || WindowManager.Instance.Display == IntPtr.Zero) return;
 
         monitorTimer += Time.unscaledDeltaTime;
         if (monitorTimer >= Mathf.Max(0.1f, monitorRefreshInterval))
@@ -68,7 +67,7 @@ public class SettingsMenuPosition : MonoBehaviour
         if (checkTimer < step) return;
         checkTimer = 0f;
 
-        if (!X11Manager.Instance.GetWindowRect(out var winRect)) return;
+        if (!WindowManager.Instance.GetWindowRect(out var winRect)) return;
 
         Rect screen = monitorRects.Count > 0 ? GetBestMonitor(winRect) : new Rect(0, 0, Screen.currentResolution.width, Screen.currentResolution.height);
 
@@ -94,8 +93,8 @@ public class SettingsMenuPosition : MonoBehaviour
 
     void RefreshMonitors()
     {
-        X11Manager.Instance.QueryMonitors();
-        monitorRects = X11Manager.Instance.GetAllMonitors();
+        WindowManager.Instance.QueryMonitors();
+        monitorRects = WindowManager.Instance.GetAllMonitors();
     }
 
     Rect GetBestMonitor(Rect win)

@@ -2,7 +2,6 @@ using DiscordRPC.Logging;
 using Lachee.Discord.Control;
 using UnityEngine;
 using UnityEngine.UI;
-using X11;
 
 public class SettingsHandlerToggles : MonoBehaviour
 {
@@ -126,7 +125,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         if (dayNightObject) dayNightObject.SetActive(data.dayNight);
         if (ambientOcclusionObject) ambientOcclusionObject.SetActive(data.ambientOcclusion);
         
-        X11Manager.Instance.SetTopmost(data.isTopmost);
+        WindowManager.Instance.SetTopmost(data.isTopmost);
 
         // Particles
         if (!_currentParticleHandler)

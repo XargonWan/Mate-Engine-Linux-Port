@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Gdk;
-using X11;
 
 public class GtkX11Helper
 {

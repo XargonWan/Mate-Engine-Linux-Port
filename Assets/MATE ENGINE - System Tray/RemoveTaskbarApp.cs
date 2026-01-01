@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using X11;
 
 public class RemoveTaskbarApp : MonoBehaviour
 {
@@ -13,10 +12,10 @@ public class RemoveTaskbarApp : MonoBehaviour
     void Start()
     {
 #if !UNITY_EDITOR
-        _unityHwnd = X11Manager.Instance.UnityWindow;
+        _unityHwnd = WindowManager.Instance.UnityWindow;
         if (_unityHwnd != IntPtr.Zero)
         {
-            X11Manager.Instance.HideFromTaskbar();
+            WindowManager.Instance.HideFromTaskbar();
             _isHidden = true;
         }
 #endif
@@ -29,7 +28,7 @@ public class RemoveTaskbarApp : MonoBehaviour
             return;
 
             _isHidden = !_isHidden;
-            X11Manager.Instance.HideFromTaskbar(_isHidden);
+            WindowManager.Instance.HideFromTaskbar(_isHidden);
 #endif
     }
 }

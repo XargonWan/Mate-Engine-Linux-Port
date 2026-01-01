@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Collections;
 using Gtk;
 using SFB;
-using X11;
 using Application = UnityEngine.Application;
 using Button = UnityEngine.UI.Button;
 
@@ -40,7 +39,7 @@ public class MEModHandler : MonoBehaviour
 
     void OpenFileDialogAndLoadMod()
     {
-        X11Manager.Instance.SetTopmost(false);
+        WindowManager.Instance.SetTopmost(false);
         var ext = new[] { new ExtensionFilter("Mod Files", "me") };
         var paths = StandaloneFileBrowser.OpenFilePanel("Select Mod", ".", ext, false);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
@@ -49,7 +48,7 @@ public class MEModHandler : MonoBehaviour
             File.Copy(paths[0], dest, true);
             LoadMod(dest);
         }
-        X11Manager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
+        WindowManager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
     }
 
     void LoadMod(string path)

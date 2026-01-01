@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using X11;
 
 public class SettingsHandlerButtons : MonoBehaviour
 {
@@ -61,13 +60,13 @@ public class SettingsHandlerButtons : MonoBehaviour
         {
             case SaveLoadHandler.SettingsData.WindowSizeState.Normal:
                 data.windowSizeState = SaveLoadHandler.SettingsData.WindowSizeState.Big;
-                X11Manager.Instance.SetWindowSize(new Vector2(2048, 1536));break;
+                WindowManager.Instance.SetWindowSize(new Vector2(2048, 1536));break;
             case SaveLoadHandler.SettingsData.WindowSizeState.Big:
                 data.windowSizeState = SaveLoadHandler.SettingsData.WindowSizeState.Small;
-                X11Manager.Instance.SetWindowSize(new Vector2(768, 512)); break;
+                WindowManager.Instance.SetWindowSize(new Vector2(768, 512)); break;
             case SaveLoadHandler.SettingsData.WindowSizeState.Small:
                 data.windowSizeState = SaveLoadHandler.SettingsData.WindowSizeState.Normal;
-                X11Manager.Instance.SetWindowSize(new Vector2(1536, 1024)); break;
+                WindowManager.Instance.SetWindowSize(new Vector2(1536, 1024)); break;
         }
         SaveLoadHandler.Instance.SaveToDisk();
     }

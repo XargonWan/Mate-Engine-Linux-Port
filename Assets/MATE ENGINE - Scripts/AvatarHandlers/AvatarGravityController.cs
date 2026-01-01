@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UniVRM10;
 using VRM;
-using X11;
 
 public class AvatarGravityController : MonoBehaviour
 {
@@ -87,7 +86,7 @@ public class AvatarGravityController : MonoBehaviour
 
     private Vector2Int GetWindowPosition()
     {
-        Vector2 vect = X11Manager.Instance.GetWindowPosition();
+        Vector2 vect = WindowManager.Instance.GetWindowPosition();
         return new Vector2Int((int)vect.x, (int)vect.y);
     }
 

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using UnityEngine;
-using X11;
 
 public class AvatarBigScreenHandler : MonoBehaviour
 {
@@ -68,7 +65,7 @@ public class AvatarBigScreenHandler : MonoBehaviour
 
     void Start()
     {
-        unityHWND = X11Manager.Instance.UnityWindow;
+        unityHWND = WindowManager.Instance.UnityWindow;
         if (MainCamera == null) MainCamera = Camera.main;
         if (avatarAnimator == null) avatarAnimator = GetComponent<Animator>();
         if (MainCamera != null)
@@ -78,7 +75,7 @@ public class AvatarBigScreenHandler : MonoBehaviour
             originalFOV = MainCamera.fieldOfView;
             originalOrthoSize = MainCamera.orthographicSize;
         }
-        if (unityHWND != IntPtr.Zero && X11Manager.Instance.GetWindowRect(out Rect r))
+        if (unityHWND != IntPtr.Zero && WindowManager.Instance.GetWindowRect(out Rect r))
         {
             originalWindowRect = r;
             originalRectSet = true;
@@ -247,7 +244,7 @@ public class AvatarBigScreenHandler : MonoBehaviour
             if (moveCanvas != null && moveCanvasWasActive) moveCanvas.SetActive(true);
             if (unityHWND != IntPtr.Zero && originalRectSet)
             {
-                X11Manager.Instance.SetWindowPosition(new Vector2(originalWindowRect.x, originalWindowRect.y));
+                WindowManager.Instance.SetWindowPosition(new Vector2(originalWindowRect.x, originalWindowRect.y));
             }
             if (MainCamera != null)
             {
@@ -310,10 +307,10 @@ public class AvatarBigScreenHandler : MonoBehaviour
 
         if (toFadeY && unityHWND != IntPtr.Zero)
         {
-            if (X11Manager.Instance.GetWindowRect(out Rect windowRect))
+            if (WindowManager.Instance.GetWindowRect(out Rect windowRect))
             {
                 Rect targetScreen = FindBestMonitorRect(windowRect);
-                X11Manager.Instance.SetWindowPosition(targetScreen.x, targetScreen.y);
+                WindowManager.Instance.SetWindowPosition(targetScreen.x, targetScreen.y);
                 originalWindowRect = windowRect;
                 originalRectSet = true;
             }

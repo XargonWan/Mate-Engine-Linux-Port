@@ -10,7 +10,6 @@ using UniVRM10;
 using System;
 using Gtk;
 using SFB;
-using X11;
 using Application = UnityEngine.Application;
 
 #if UNITY_EDITOR
@@ -58,12 +57,12 @@ public class VRMLoader : MonoBehaviour
         if (isLoading) return;
 
         isLoading = true;
-        X11Manager.Instance.SetTopmost(false);
+        WindowManager.Instance.SetTopmost(false);
         var extensions = new[] { new ExtensionFilter("Model Files", "vrm", "me", "prefab") };
         string[] paths = StandaloneFileBrowser.OpenFilePanel("Select Model File", "", extensions, false);
         if (paths.Length > 0 && !string.IsNullOrEmpty(paths[0]))
             LoadVRM(paths[0]);
-        X11Manager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
+        WindowManager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
         
         isLoading = false;
     }

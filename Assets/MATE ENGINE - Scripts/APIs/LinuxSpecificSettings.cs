@@ -1,6 +1,5 @@
 using Gtk;
 using UnityEngine;
-using X11;
 using Application = Gtk.Application;
 
 public class LinuxSpecificSettings : MonoBehaviour
@@ -53,12 +52,12 @@ public class LinuxSpecificSettings : MonoBehaviour
         }
         if (show)
         {
-            X11Manager.Instance.SetTopmost(false);
+            WindowManager.Instance.SetTopmost(false);
             window.ShowAll();
             Application.Run();
             return;
         }
-        X11Manager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
+        WindowManager.Instance.SetTopmost(SaveLoadHandler.Instance.data.isTopmost);
         window.Hide();
         Application.Quit();
     }

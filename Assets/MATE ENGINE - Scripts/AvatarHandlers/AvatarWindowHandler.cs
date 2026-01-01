@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using X11;
 using Random = UnityEngine.Random;
 
 public class AvatarWindowHandler : MonoBehaviour
@@ -35,10 +34,10 @@ public class AvatarWindowHandler : MonoBehaviour
 
     void Start()
     {
-        _unityHwnd = X11Manager.Instance.UnityWindow;
+        _unityHwnd = WindowManager.Instance.UnityWindow;
         animator = GetComponent<Animator>();
         controller = GetComponent<AvatarAnimatorController>();
-        lastDesktopPosition = X11Manager.Instance.GetWindowPosition();
+        lastDesktopPosition = WindowManager.Instance.GetWindowPosition();
     }
 
     void Update()
@@ -72,7 +71,7 @@ public class AvatarWindowHandler : MonoBehaviour
 
         if (_snappedHwnd != IntPtr.Zero)
         {
-            if (X11Manager.Instance.IsWindowMaximized(_snappedHwnd) || IsWindowFullscreen(_snappedHwnd))
+            if (WindowManager.Instance.IsWindowMaximized(_snappedHwnd) || IsWindowFullscreen(_snappedHwnd))
             {
                 ExitWindowSitting();
                 MoveMateToDesktopPosition();
@@ -90,13 +89,13 @@ public class AvatarWindowHandler : MonoBehaviour
         if (Time.time < lastCacheUpdateTime + CacheUpdateCooldown) return;
         UpdateCachedWindows();
 
-        X11Manager.Instance.GetWindowRect(out Rect unityRect);
+        WindowManager.Instance.GetWindowRect(out Rect unityRect);
 
         foreach (var entry in cachedWindows)
         {
             if (entry.Hwnd == _unityHwnd) continue;
             
-            X11Manager.Instance.GetWindowRect(entry.Hwnd, out Rect winRect);
+            WindowManager.Instance.GetWindowRect(entry.Hwnd, out Rect winRect);
             Rect topBar = new Rect(winRect.x, winRect.y, winRect.width, 5 * desktopScale);
             Rect snapRect = new Rect(unityRect.x, unityRect.y + unityRect.height, unityRect.width, snapThreshold * desktopScale);
             if (!snapRect.Overlaps(topBar)) continue;
@@ -109,26 +108,26 @@ public class AvatarWindowHandler : MonoBehaviour
 
     void FollowSnappedWindow()
     {
-        if (!X11Manager.Instance.GetWindowRect(_snappedHwnd, out Rect winRect) || 
-            !X11Manager.Instance.IsWindowVisible(_snappedHwnd))
+        if (!WindowManager.Instance.GetWindowRect(_snappedHwnd, out Rect winRect) || 
+            !WindowManager.Instance.IsWindowVisible(_snappedHwnd))
         {
             ExitWindowSitting();
             return;
         }
 
-        Vector2 unitySize = X11Manager.Instance.GetWindowSize();
+        Vector2 unitySize = WindowManager.Instance.GetWindowSize();
         float targetY = winRect.y - unitySize.y + windowSitYOffset * unitySize.y;
         float targetX = winRect.x + horizontalOffset;
 
-        X11Manager.Instance.SetWindowPosition(targetX, targetY);
+        WindowManager.Instance.SetWindowPosition(targetX, targetY);
     }
 
     bool IsStillNearSnappedWindow(Vector2 unityPos)
     {
         if (_snappedHwnd == IntPtr.Zero) return false;
-        if (!X11Manager.Instance.GetWindowRect(_snappedHwnd, out Rect winRect)) return false;
+        if (!WindowManager.Instance.GetWindowRect(_snappedHwnd, out Rect winRect)) return false;
 
-        Vector2 size = X11Manager.Instance.GetWindowSize();
+        Vector2 size = WindowManager.Instance.GetWindowSize();
         float currentBottom = unityPos.y + size.y;
         float targetBottom = winRect.y;
 
@@ -138,18 +137,18 @@ public class AvatarWindowHandler : MonoBehaviour
     void UpdateCachedWindows()
     {
         cachedWindows.Clear();
-        var allWindows = X11Manager.Instance.GetAllVisibleWindows();
+        var allWindows = WindowManager.Instance.GetAllVisibleWindows();
         foreach (var hWnd in allWindows)
         {
-            if (!X11Manager.Instance.GetWindowRect(hWnd, out Rect r)) continue;
-            string cls = X11Manager.Instance.GetClassName(hWnd);
-            bool isTaskbar = X11Manager.Instance.IsDock(hWnd);
+            if (!WindowManager.Instance.GetWindowRect(hWnd, out Rect r)) continue;
+            string cls = WindowManager.Instance.GetClassName(hWnd);
+            bool isTaskbar = WindowManager.Instance.IsDock(hWnd);
 
             if (!isTaskbar)
             {
                 if (r.width < 100 || r.height < 100) continue;
                 if (cls.Length == 0) continue;
-                if (X11Manager.Instance.IsDesktop(hWnd)) continue;
+                if (WindowManager.Instance.IsDesktop(hWnd)) continue;
             }
 
             cachedWindows.Add(new WindowEntry { Hwnd = hWnd, Rect = r });
@@ -166,11 +165,11 @@ public class AvatarWindowHandler : MonoBehaviour
 
     struct WindowEntry { public IntPtr Hwnd; public Rect Rect; }
 
-    Vector2 GetUnityWindowPosition() => X11Manager.Instance.GetWindowPosition();
+    Vector2 GetUnityWindowPosition() => WindowManager.Instance.GetWindowPosition();
 
     bool IsWindowFullscreen(IntPtr hwnd)
     {
-        if (!X11Manager.Instance.GetWindowRect(hwnd, out Rect rect)) return false;
+        if (!WindowManager.Instance.GetWindowRect(hwnd, out Rect rect)) return false;
         int screenWidth = Display.main.systemWidth;
         int screenHeight = Display.main.systemHeight;
         int tolerance = 2;
@@ -180,7 +179,7 @@ public class AvatarWindowHandler : MonoBehaviour
 
     void MoveMateToDesktopPosition()
     {
-        X11Manager.Instance.SetWindowPosition(lastDesktopPosition.x, lastDesktopPosition.y);
+        WindowManager.Instance.SetWindowPosition(lastDesktopPosition.x, lastDesktopPosition.y);
     }
 
     public void ForceExitWindowSitting()

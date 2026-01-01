@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using X11;
 
 [RequireComponent(typeof(Animator))]
 public class HandHolder : MonoBehaviour
@@ -102,8 +101,8 @@ public class HandHolder : MonoBehaviour
     float ComputeWorldWeight(Transform hand)
     {
         if (!hand) return 0f;
-        var oriMouse = X11Manager.Instance.GetMousePosition();
-        var winPos = X11Manager.Instance.GetWindowPosition();
+        var oriMouse = WindowManager.Instance.GetMousePosition();
+        var winPos = WindowManager.Instance.GetWindowPosition();
         var mouseScreen = new Vector3(oriMouse.x - winPos.x, Screen.height - oriMouse.y + winPos.y);
         mouseScreen.z = mainCam.WorldToScreenPoint(hand.position).z;
         Vector3 mouseWorld = mainCam.ScreenToWorldPoint(mouseScreen);
@@ -179,8 +178,8 @@ public class HandHolder : MonoBehaviour
 
     Vector3 GetProjectedMouseTarget()
     {
-        var oriMouse = X11Manager.Instance.GetMousePosition();
-        var winPos = X11Manager.Instance.GetWindowPosition();
+        var oriMouse = WindowManager.Instance.GetMousePosition();
+        var winPos = WindowManager.Instance.GetWindowPosition();
         var mouse = new Vector3(oriMouse.x - winPos.x, Screen.height - oriMouse.y + winPos.y);
         mouse.z = mainCam.WorldToScreenPoint(chest.position).z;
         Vector3 world = mainCam.ScreenToWorldPoint(mouse);
