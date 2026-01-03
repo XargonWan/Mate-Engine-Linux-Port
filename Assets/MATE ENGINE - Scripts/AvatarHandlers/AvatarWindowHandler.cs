@@ -20,6 +20,7 @@ public class AvatarWindowHandler : MonoBehaviour
     public float windowSitYOffset;
     
     IntPtr _snappedHwnd = IntPtr.Zero;
+    Rect _snappedRect;
     IntPtr _unityHwnd = IntPtr.Zero;
     Vector2 lastDesktopPosition;
     readonly List<WindowEntry> cachedWindows = new();
@@ -55,16 +56,23 @@ public class AvatarWindowHandler : MonoBehaviour
 
         Vector2 unityPos = GetUnityWindowPosition();
 
-        if (controller.isDragging && !animator.GetBool(IsSitting))
+        if (controller.isDragging)
         {
-            if (_snappedHwnd == IntPtr.Zero)
-                TrySnap(unityPos);
-            else if (!IsStillNearSnappedWindow(unityPos))
+            if (!animator.GetBool(IsSitting))
             {
-                ExitWindowSitting();
+                if (_snappedHwnd == IntPtr.Zero)
+                    TrySnap(unityPos);
+                else if (!IsStillNearSnappedWindow(unityPos))
+                {
+                    ExitWindowSitting();
+                }
+            }
+            else
+            {
+                horizontalOffset = unityPos.x - _snappedRect.x;
             }
         }
-        else if (!controller.isDragging && _snappedHwnd != IntPtr.Zero)
+        else if (_snappedHwnd != IntPtr.Zero)
         {
             FollowSnappedWindow();
         }
@@ -95,14 +103,14 @@ public class AvatarWindowHandler : MonoBehaviour
         {
             if (entry.Hwnd == _unityHwnd) continue;
             
-            WindowManager.Instance.GetWindowRect(entry.Hwnd, out Rect winRect);
-            Rect topBar = new Rect(winRect.x, winRect.y, winRect.width, 5 * desktopScale);
+            Rect topBar = new Rect(entry.Rect.x, entry.Rect.y, entry.Rect.width, 5 * desktopScale);
             Rect snapRect = new Rect(unityRect.x, unityRect.y + unityRect.height, unityRect.width, snapThreshold * desktopScale);
             if (!snapRect.Overlaps(topBar)) continue;
             _snappedHwnd = entry.Hwnd;
+            _snappedRect = entry.Rect;
             animator.SetBool(IsWindowSit, true);
             lastDesktopPosition = unityPos;
-            horizontalOffset = unityPos.x - winRect.x;
+            horizontalOffset = unityPos.x - entry.Rect.x;
         }
     }
 
