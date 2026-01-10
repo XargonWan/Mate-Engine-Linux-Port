@@ -67,10 +67,8 @@ public class AvatarWindowHandler : MonoBehaviour
                     ExitWindowSitting();
                 }
             }
-            else
-            {
+            if (_snappedHwnd != IntPtr.Zero)
                 horizontalOffset = unityPos.x - _snappedRect.x;
-            }
         }
         else if (_snappedHwnd != IntPtr.Zero)
         {
