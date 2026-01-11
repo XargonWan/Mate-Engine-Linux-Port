@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System;
 using System.IO;
 using System.Globalization;
+using System.Runtime;
 
 public class MemoryTrim : MonoBehaviour
 {
@@ -32,6 +33,11 @@ public class MemoryTrim : MonoBehaviour
             InvokeRepeating(nameof(PeriodicTrim), 600f, 600f); 
         }
     }
+    
+    void DelayedStartupTrim()
+    {
+        if (enableAutoTrim) TrimNow();
+    }
 
     void Awake()
     {
@@ -41,6 +47,7 @@ public class MemoryTrim : MonoBehaviour
              TrimNow();
              Invoke(nameof(StartupTrim), 10f);
              InvokeRepeating(nameof(PeriodicTrim), 600f, 600f);
+             Invoke(nameof(DelayedStartupTrim), 15f);
         }
     }
 
@@ -55,12 +62,19 @@ public class MemoryTrim : MonoBehaviour
         #if UNITY_EDITOR
         return;
         #endif
-        malloc_trim(0);
-        StartCoroutine(AggressivePageOutRoutine());
+        StartCoroutine(TrimRoutine());
     }
 
-    private IEnumerator AggressivePageOutRoutine()
+    private IEnumerator TrimRoutine()
     {
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true, true);
+        AsyncOperation op = Resources.UnloadUnusedAssets();
+        while (!op.isDone) yield return null;
+        
+        malloc_trim(0);
+        
+        // Page Out Logic
         if (!File.Exists("/proc/self/maps")) yield break;
 
         string[] lines;

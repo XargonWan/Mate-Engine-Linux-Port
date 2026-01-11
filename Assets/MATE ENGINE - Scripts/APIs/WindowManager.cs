@@ -36,7 +36,7 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     private Vector2 initialMousePos;
     private Vector2 initialWindowPos;
-    public bool isDragging;
+    private bool isDragging;
 
     public IntPtr Display
     {
@@ -143,6 +143,8 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             throw new Exception("Cannot open X11 display");
         }
 
+        XSetErrorHandler(ShowError);
+
         _rootWindow = XDefaultRootWindow(_display);
         _netWmState = XInternAtom(_display, "_NET_WM_STATE", false);
         _netWmStateFullscreen = XInternAtom(_display, "_NET_WM_STATE_FULLSCREEN", false);
@@ -151,7 +153,25 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         _netWmWindowType = XInternAtom(_display, "_NET_WM_WINDOW_TYPE", false);
     }
         
+    private int ShowError(IntPtr display, IntPtr e)
+    {
+        ShowError(LookupError(e) ?? "???");
+        return 0;
+    }
+
     private void ShowError(string error) => Debug.LogError(typeof(WindowManager) + ": " + error);
+
+    private string LookupError(IntPtr errorEvent)
+    {
+        XErrorEvent error = Marshal.PtrToStructure<XErrorEvent>(errorEvent);
+        if (_display == IntPtr.Zero) return "Display not initialized";
+
+        var buffer = new byte[256];
+
+        XGetErrorText(_display, error.error_code, buffer, buffer.Length);
+
+        return System.Text.Encoding.ASCII.GetString(buffer).TrimEnd('\0');;
+    }
 
     private void Dispose()
     {
@@ -175,6 +195,7 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             XSync(_display, false);
             XCloseDisplay(_display);
             _display = IntPtr.Zero;
+            XFreeThreads();
         }
     }
     #endregion
@@ -272,8 +293,7 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
             return;
         }
 
-        int major, minor;
-        if (XRRQueryVersion(_display, out major, out minor) == 0 || major < 1 || (major == 1 && minor < 3))
+        if (XRRQueryVersion(_display, out var major, out var minor) == 0 || major < 1 || (major == 1 && minor < 3))
         {
             Debug.LogError("XRandR 1.3+ required for multi-monitor.");
             return;
@@ -1442,10 +1462,28 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         ReflectX  = 1 << 4,
         ReflectY  = 1 << 5
     }
+
+    // Error handler delegate type
+    private delegate int XErrorHandler(IntPtr display, IntPtr errorEvent);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct XErrorEvent
+    {
+        public int type;
+        public IntPtr display;
+        public ulong serial;
+        public byte error_code;
+        public byte request_code;
+        public byte minor_code;
+        public IntPtr resourceid;
+    }
         
     // X11 Library imports
     [DllImport(LibX11)]
     private static extern int XInitThreads();
+
+    [DllImport(LibX11)]
+    private static extern int XFreeThreads();
     
     [DllImport(LibX11)]
     private static extern IntPtr XOpenDisplay(string displayName);
@@ -1632,6 +1670,12 @@ public class WindowManager : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     [DllImport(LibX11)]
     private static extern string XGetAtomName(IntPtr display, IntPtr atom);
+
+    [DllImport(LibX11)]
+    private static extern bool XGetErrorText(IntPtr display, int code, byte[] buffer, int size);
+
+    [DllImport(LibX11)]
+    private static extern XErrorHandler XSetErrorHandler(XErrorHandler handler);
 
     #endregion
 }

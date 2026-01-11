@@ -247,6 +247,8 @@ public class LinuxSpecificSettings : MonoBehaviour
             ShowWindow(false);
         }
         GUILayout.EndHorizontal();
+        
+        GUILayout.EndHorizontal();
 
         GUILayout.EndVertical();
 
