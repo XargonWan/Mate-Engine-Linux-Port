@@ -173,7 +173,8 @@ public class SaveLoadHandler : MonoBehaviour
         public int contextLength = 4096;
         public bool enableHusbandoMode = false;
         
-        public bool useXMoveWindow = false;
+        [JsonProperty("useXMoveWindow")]
+        public bool useLegacyMoveResizeCalls = false;
         public bool verboseDiscordRPCLog = false;
         public bool enableAutoMemoryTrim = false;
     }

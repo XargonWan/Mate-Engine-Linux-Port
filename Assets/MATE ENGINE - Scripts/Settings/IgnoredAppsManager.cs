@@ -17,8 +17,11 @@ public class AllowedAppsManager : MonoBehaviour
     private List<string> _currentRunningAppNames = new List<string>();
     private List<string> AllowedApps => SaveLoadHandler.Instance.data.allowedApps;
 
-    private void Start()
+    private bool _initialized;
+
+    private void LateUpdate()
     {
+        if (_initialized) return;
         addToAllowedListButton.onClick.AddListener(() =>
         {
             if (runningAppsDropdown.options.Count == 0) return;
@@ -38,6 +41,7 @@ public class AllowedAppsManager : MonoBehaviour
         StartCoroutine(RefreshRunningAppsDropdown());
         UpdateAllowedListUI();
         SaveLoadHandler.SyncAllowedAppsToAllAvatars(); // Initial sync on load
+        _initialized = true;
     }
     
     
@@ -114,7 +118,7 @@ public class AllowedAppsManager : MonoBehaviour
         }
         for (int i = 0, count = audioPrograms.Count; i < count; i++)
         {
-            appNames.Add(audioPrograms[i].ProcessName);
+            appNames.Add(audioPrograms[i].ProcessName == string.Empty ? audioPrograms[i].Name : audioPrograms[i].ProcessName);
         }
         onComplete?.Invoke(appNames.OrderBy(n => n).ToList());
     }

@@ -225,9 +225,6 @@ public class AvatarLibraryMenu : MonoBehaviour
         TMP_Text fileTypeText = item.transform.Find("File Type").GetComponent<TMP_Text>();
         TMP_Text polygonText = item.transform.Find("Polygons")?.GetComponent<TMP_Text>();
         Button loadButton = item.transform.Find("Button").GetComponent<Button>();
-        Button removeButton = item.transform.Find("Remove")?.GetComponent<Button>();
-        Button uploadButton = item.transform.Find("Upload")?.GetComponent<Button>();
-        Slider uploadSlider = item.transform.Find("UploadBar")?.GetComponent<Slider>();
 
         if (titleText != null) titleText.text = "Name: " + (!string.IsNullOrEmpty(dlc.displayName) ? dlc.displayName : dlc.prefab.name);
         if (authorText != null) authorText.text = "Author: " + dlc.author;
@@ -248,8 +245,6 @@ public class AvatarLibraryMenu : MonoBehaviour
 
         loadButton.onClick.RemoveAllListeners();
         loadButton.onClick.AddListener(() => LoadAvatar(dlc.prefab.name));
-
-        if (uploadSlider != null) uploadSlider.gameObject.SetActive(false);
     }
 
     private void SetupAvatarItem(GameObject item, AvatarEntry entry)
@@ -262,8 +257,7 @@ public class AvatarLibraryMenu : MonoBehaviour
         TMP_Text polygonText = item.transform.Find("Polygons")?.GetComponent<TMP_Text>();
         Button loadButton = item.transform.Find("Button").GetComponent<Button>();
         Button removeButton = item.transform.Find("Remove").GetComponent<Button>();
-        Button uploadButton = item.transform.Find("Upload")?.GetComponent<Button>();
-        Slider uploadSlider = item.transform.Find("UploadBar")?.GetComponent<Slider>();
+        Button locateButton = item.transform.Find("Locate")?.GetComponent<Button>();
         Toggle nsfwToggle = item.transform.Find("NSFW")?.GetComponent<Toggle>();
         if (nsfwToggle != null)
         {
@@ -305,45 +299,17 @@ public class AvatarLibraryMenu : MonoBehaviour
         holdHandler.labelText = removeButton.GetComponentInChildren<TMP_Text>();
         holdHandler.audioSource = item.GetComponentInChildren<AudioSource>();
 
-        if (uploadButton != null) uploadButton.gameObject.SetActive(entry.isOwner);
-        if (uploadSlider != null) uploadSlider.gameObject.SetActive(false);
-        if (uploadButton != null && uploadButton.gameObject.activeSelf)
+        if (locateButton != null) locateButton.gameObject.SetActive(entry.isOwner);
+        if (locateButton != null && locateButton.gameObject.activeSelf)
         {
-            uploadButton.onClick.RemoveAllListeners();
-            uploadButton.onClick.AddListener(() =>
+            locateButton.onClick.RemoveAllListeners();
+            locateButton.onClick.AddListener(() =>
             {
-                if (nsfwToggle != null)
-                    entry.isNSFW = nsfwToggle.isOn;
-
-                var match = avatarEntries.FirstOrDefault(e => e.filePath == entry.filePath);
-                if (match != null)
-                {
-                    match.isNSFW = entry.isNSFW;
-                    SaveAvatars();
-                }
+                Application.OpenURL(Path.GetDirectoryName(entry.filePath));
             });
-
-            var handler = uploadButton.GetComponent<UploadButtonHoldHandler>();
-            if (handler != null)
-            {
-                var match = avatarEntries.FirstOrDefault(e => e.filePath == entry.filePath);
-                if (match != null)
-                    handler.entry = match;
-
-                handler.progressSlider = uploadSlider;
-                handler.labelText = uploadButton.GetComponentInChildren<TMP_Text>();
-            }
-        }
-
-
-        if (uploadSlider != null)
-        {
-            uploadSlider.gameObject.SetActive(false);
         }
     }
-
-
-
+    
     private void LoadAvatar(string path)
     {
         var loader = FindFirstObjectByType<VRMLoader>();

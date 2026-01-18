@@ -174,7 +174,7 @@ public class SettingsHandlerToggles : MonoBehaviour
         data.enableDanceSwitch = false;
         data.enableRandomMessages = false;
         data.enableHusbandoMode = false;
-        data.useXMoveWindow = false;
+        data.useLegacyMoveResizeCalls = false;
         data.verboseDiscordRPCLog = false;
         data.enableAutoMemoryTrim = false;
 
