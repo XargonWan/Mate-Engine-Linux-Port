@@ -209,6 +209,47 @@ jobs:
           echo "tarball=$OUT_NAME" >> $GITHUB_OUTPUT
           rm -rf "$TMPDIR"
 
+      - name: Create MateEngineX alias tarball
+        if: ${{ steps.package_release.outputs.tarball != '' }}
+        run: |
+          set -euo pipefail
+          VER=${{ steps.vars.outputs.VERSION }}
+          SRC="${{ steps.package_release.outputs.tarball }}"
+          DST="MateEngineX_${VER}.tar.gz"
+          if [ -f "$SRC" ]; then
+            cp "$SRC" "$DST"
+            ls -lh "$DST" || true
+          else
+            echo "Source tarball $SRC not found; skipping alias creation"
+          fi
+
+      - name: Prepare release metadata
+        id: release_meta
+        run: |
+          set -euo pipefail
+          VER=${{ steps.vars.outputs.VERSION }}
+          TITLE="Public Release ${VER}"
+          TMPBODY=$(mktemp)
+          printf '%s\n' \
+            "Public Release ${VER}" \
+            "" \
+            "This is a the release ${VER} of MateEngine Linux Port." \
+            "" \
+            "How to use:" \
+            "" \
+            "    - Download MateEngineX_${VER}.tar.gz" \
+            "    - Extract it using your favourite decompression utility" \
+            "    - Set \`launch.sh\` as executable: \`chmod +x launch.sh\`" \
+            "    - Double click the launcher or run it from terminal: \`./launch.sh\`" \
+            "    - Enjoy!" > "$TMPBODY"
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          cat "$TMPBODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          rm -f "$TMPBODY"
+          echo "$BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Detect plugins archive
         id: plugins_archive
         run: |
@@ -242,11 +283,12 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.vars.outputs.TAG }}
-          name: ${{ steps.vars.outputs.TAG }}
-          body: "Release ${{ steps.vars.outputs.TAG }} created by workflow."
+          name: ${{ steps.release_meta.outputs.title }}
+          body: ${{ steps.release_meta.outputs.body }}
           artifacts: |
             mate-engine-unity-*.tar.gz
             mate-engine-linux-*.tar.gz
+            MateEngineX_*.tar.gz
             dist/plugins-*.tar.gz
           allowUpdates: true
           omitBodyDuringUpdate: true
