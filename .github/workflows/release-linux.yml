@@ -106,13 +106,82 @@ jobs:
       - name: Create release tarball
         id: package_release
         run: |
-          set -e
+          set -euo pipefail
           OUT_NAME="mate-engine-linux-${{ steps.vars.outputs.VERSION }}.tar.gz"
-          echo "Creating tarball $OUT_NAME"
-          # Exclude git metadata and large directories you don't want in release
-          tar --exclude='.git' --exclude='Library' --exclude='Temp' --exclude='Logs' --exclude='.vs' -czf "$OUT_NAME" .
+          echo "Creating release tarball $OUT_NAME containing runtime artifacts and integration plugin"
+
+          TMPDIR=$(mktemp -d)
+          echo "Staging in $TMPDIR"
+
+          # If the Unity build artifact exists and looks like a tar, extract it to preserve runtime layout
+          if [ -n "${{ steps.package_unity.outputs.unity_build_artifact }}" ] && [ -f "${{ steps.package_unity.outputs.unity_build_artifact }}" ]; then
+            UNITY_ART="${{ steps.package_unity.outputs.unity_build_artifact }}"
+            echo "Found Unity artifact: $UNITY_ART"
+            if [[ "$UNITY_ART" == *.tar.gz ]] || [[ "$UNITY_ART" == *.tgz ]]; then
+              echo "Extracting Unity artifact into staging area"
+              tar -xzf "$UNITY_ART" -C "$TMPDIR"
+            else
+              echo "Copying Unity artifact into staging area"
+              mkdir -p "$TMPDIR/unity"
+              cp "$UNITY_ART" "$TMPDIR/unity/"
+            fi
+          fi
+
+          # If plugins archive exists, extract it and merge plugin files into staging
+          if [ -n "${{ steps.plugins_archive.outputs.archive }}" ] && [ -f "${{ steps.plugins_archive.outputs.archive }}" ]; then
+            PLUG_ARCH="${{ steps.plugins_archive.outputs.archive }}"
+            echo "Found plugins archive: $PLUG_ARCH"
+            mkdir -p "$TMPDIR/plugins_extract"
+            if [[ "$PLUG_ARCH" == *.tar.gz ]] || [[ "$PLUG_ARCH" == *.tgz ]]; then
+              tar -xzf "$PLUG_ARCH" -C "$TMPDIR/plugins_extract"
+            else
+              cp "$PLUG_ARCH" "$TMPDIR/plugins_extract/"
+            fi
+            # Copy any Plugins/ tree from the archive into staging root
+            if [ -d "$TMPDIR/plugins_extract/Plugins" ]; then
+              mkdir -p "$TMPDIR/Plugins"
+              cp -a "$TMPDIR/plugins_extract/Plugins/." "$TMPDIR/Plugins/"
+            fi
+            # Also copy any Mods intended for StreamingAssets
+            if [ -d "$TMPDIR/plugins_extract/Mods" ]; then
+              mkdir -p "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods"
+              cp -a "$TMPDIR/plugins_extract/Mods/." "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/"
+            fi
+          fi
+
+          # If the repo contains a local integration plugin copy it into both Plugins/ and StreamingAssets/Mods for runtime
+          if [ -d "Plugins/Synthetic_Heart" ]; then
+            echo "Including local Plugins/Synthetic_Heart into runtime layout"
+            mkdir -p "$TMPDIR/Plugins/Synthetic_Heart"
+            cp -a "Plugins/Synthetic_Heart/." "$TMPDIR/Plugins/Synthetic_Heart/"
+
+            mkdir -p "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart"
+            cp -a "Plugins/Synthetic_Heart/." "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart/"
+          fi
+
+          # Add essential metadata & helper files (README, LICENSE, launch.sh)
+          mkdir -p "$TMPDIR/meta"
+          for f in README.md LICENSE launch.sh; do
+            if [ -f "$f" ]; then
+              cp "$f" "$TMPDIR/meta/"
+              echo "Included $f"
+            fi
+          done
+
+          # If the extracted Unity artifact didn't produce an executable layout, include known runtime files if present in repo root
+          for f in MateEngineX.x86_64 UnityPlayer.so launch.sh; do
+            if [ -f "$f" ] && [ ! -f "$TMPDIR/$f" ]; then
+              echo "Copying $f into staging"
+              cp "$f" "$TMPDIR/"
+            fi
+          done
+
+          # Finalize tarball
+          tar -C "$TMPDIR" -czf "$OUT_NAME" .
+
           ls -lh "$OUT_NAME"
           echo "tarball=$OUT_NAME" >> $GITHUB_OUTPUT
+          rm -rf "$TMPDIR"
 
       - name: Detect plugins archive
         id: plugins_archive
