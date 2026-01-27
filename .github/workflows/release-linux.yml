@@ -12,7 +12,8 @@ on:
         required: false
       unity_version:
         description: 'Unity Editor version to use for CI (e.g. 2021.3.31f1). Required for building MateEngineX.'
-        required: true
+        required: false
+        default: '6000.2.6f2'
 permissions:
   contents: write
 
