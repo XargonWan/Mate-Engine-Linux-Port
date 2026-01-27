@@ -70,7 +70,7 @@ jobs:
         with:
           unityVersion: ${{ github.event.inputs.unity_version }}
           projectPath: .
-          targetPlatform: Linux
+          targetPlatform: StandaloneLinux64
           buildName: MateEngineX
           buildsPath: build/unity
         env:
