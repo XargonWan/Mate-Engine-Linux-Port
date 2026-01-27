@@ -204,6 +204,7 @@ jobs:
         id: create_release
         uses: actions/create-release@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.vars.outputs.TAG }}
           release_name: ${{ steps.vars.outputs.TAG }}
           body: "Release ${{ steps.vars.outputs.TAG }} created by workflow."
