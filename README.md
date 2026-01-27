@@ -1,6 +1,6 @@
 # 🌐 Language / 语言选择
 - [English](#English)
-- [中文](#中文)
+- [中文](#中文) · [🇨🇳 中文版](./README_CN.md)
 
 ---
 
@@ -63,6 +63,20 @@ Note that if you use GNOME, you will need [AppIndicator and KStatusNotifierItem 
 - Event-based Messages
 - Lower RAM usage than Windows version (Memory trimming enabled)
 
+### Synthetic Heart integration
+<img src="https://raw.githubusercontent.com/XargonWan/Synthetic_Heart/develop/docs/res/synth_banner.png" alt="Synthetic Heart" width="240" />
+Bring your virtual companion to the desktop — **Synthetic Heart (SyntH)**. This optional plugin (located at `Plugins/Synthetic_Heart`) connects MateEngine with SyntH and enables easy features like animation sharing, prompt hints and message routing. 
+
+Is it included in releases? If the `Plugins/Synthetic_Heart` folder exists in this repository it will be packaged into our release tarball and placed into the runtime layout (both `Plugins/Synthetic_Heart` and `MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart`). If you don't find it in your release, you can install it manually.
+
+How to install & connect:
+- From a release: extract the tarball — plugin files will already be included when present in the repo.
+- Manual install: copy the `Plugins/Synthetic_Heart` folder into the game root (next to `MateEngineX.x86_64`) or into `MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart`, then restart the game.
+- Run a Synthetic Heart server (see https://github.com/XargonWan/Synthetic_Heart). The plugin talks to SyntH's web API (default `http://localhost:11434`).
+- Quick connectivity check: start the game with the argument `--synth-integration-test=http://<synth-host>:11434`; the integration runner will probe `GET /api/prompt_override` and exit with code 0 on success.
+
+Learn more and install SyntH: https://github.com/XargonWan/Synthetic_Heart
+
 ![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/RAMComparition.png)
 
 ### Known Issues
@@ -80,79 +94,3 @@ Note that if you use GNOME, you will need [AppIndicator and KStatusNotifierItem 
 
 This project lacks further testing and updates. Feel free to make PRs to contribute!
 
----
-
-## 中文
-
-> [!IMPORTANT]
-> 我是高二学生，学业很忙！
-> Issues/PR 回复与版本发布较慢，欢迎提交 PR 或去 Discussions 讨论。谢谢理解！
-
-> [!NOTE]
-> 项目仍在维护，但优先级在高考前会降低。
-
-# Mate-Engine-Linux-Port
-这是一个非官方的MateEngine Linux移植版 - 一个免费的Desktop Mate替代品（桌宠软件），具有轻量级界面和自定义VRM支持。
-已在Ubuntu 24.04 LTS上测试。
-
-![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/Screenshot.png)
-
-### 用法
-在[Releases](https://github.com/Marksonthegamer/Mate-Engine-Linux-Port/releases/)页面获取预构建版本。必须运行输出目录中的`launch.sh`，否则 MateEngne 将缺少透明窗口背景（对于 KDE Plasma 桌面环境，你还需要在 KDE 系统设置中禁用“允许应用程序阻止显示特效合成”）。
-
-### 系统要求
-- 一个常见的 GNU/Linux 发行版
-- 一个常见的 X11 桌面环境，支持显示特效合成（compositing） ，比如KDE，Xfce，GNOME等
-- 至少 1 GiB 的交换空间（可选）
-- `libpulse-dev` 和 `pipewire-pulse` (如果你在用 Pipewire 作为音频服务器)
-- `libgtk-3-dev libglib2.0-dev libappindicator3-dev`
-- `libx11-6 libxext6 libxrender1 libxdamage1`
-- `libayatana-appindicator`
-
-以下命令适用于 Ubuntu 和别的基于 Debian 的 Linux:
-```bash
-sudo apt install libpulse-dev libgtk-3-0t64 libglib2.0-0t64 libayatana-appindicator3-1 libx11-6 libxext6 libxrender1 libxdamage1
-```
-以下命令适用于 Fedora:
-```bash
-sudo dnf install pulseaudio-libs-devel gtk3-devel glib2-devel libX11-devel libXext-devel libXrender-devel libXdamage-devel libayatana-appindicator
-```
-以下命令适用于 Arch Linux:
-```bash
-sudo pacman -S libpulse gtk3 glib2 libx11 libxext libxrender libxdamage libayatana-appindicator
-```
-
-如果你使用 GNOME 桌面环境，你还需要安装 [AppIndicator and KStatusNotifierItem Support extension](https://extensions.gnome.org/extension/615/appindicator-support/) 以显示托盘图标。
-
-### 如何编译
-- 出于安全原因，你需要手动编译 `StandaloneFilebrowser` 插件（只需在`Mate-Engine-Linux-Port/Plugins/Linux/StandaloneFileBrowser`下使用`make`命令，然后将`libStandaloneFileBrowser.so`复制到`Mate-Engine-Linux-Port/Asset/MATE ENGINE - Packages/StandaloneFileBrowser/Plugins/Linux/x86_64`）
-- 然后使用 Unity 6000.2.6f2 打开此项目然后构建Player，将可执行文件重命名为"MateEngineX.x86_64"。
-
-### 移植的功能与亮点
-- 模型视觉效果、闹钟、屏保、Q版模式（它们不需要任何外部库，因此始终工作）
-- 带 Cutoff 的透明背景
-- 窗口置顶
-- 跳舞（实验性，需要PulseAudio或Pipewire-Pulse用于音频程序检测）
-- AI聊天（需要`Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf`，文件名区分大小写）
-- 鼠标跟踪（手持和眼睛跟踪）
-- Discord RPC
-- 自定义 VRM 模型导入
-- 简体中文版汉化
-- 基于事件的提示信息
-- 与 Windows 版相比，使用更少内存（已启用内存削减）
-
-![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/RAMComparition.png)
-
-### 已知问题
-- 坐在窗口和程序坞上仍然有点bug
-- 系统性能较低时崩溃（`pa_mainloop_iterate`）
-- Mutter 合成器（GNOME）中窗口的移动范围有限
-- PulseAudio有时会返回空的音频程序名称
-- Mod 不会正常加载
-
-### 已删除
-- Steam API (无创意工坊支持)
-- NAudio
-- UniWindowController
-
-该项目缺乏进一步的测试和更新。请随时通过Pull Requests来贡献！
