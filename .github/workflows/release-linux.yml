@@ -58,7 +58,7 @@ jobs:
           exit 1
 
       - name: Run build
-        if: ${{ github.event.inputs.simulate != true }}
+        if: ${{ github.event.inputs.simulate != 'true' }}
         run: |
           set -e
           if [ -x ./build.sh ]; then
@@ -72,7 +72,7 @@ jobs:
           fi
 
       - name: Build Unity project
-        if: ${{ github.event.inputs.simulate != true }}
+        if: ${{ github.event.inputs.simulate != 'true' }}
         uses: game-ci/unity-builder@v4
         with:
           unityVersion: ${{ github.event.inputs.unity_version }}
@@ -87,7 +87,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
       - name: Package Unity build artifacts
-        if: ${{ github.event.inputs.simulate != true }}
+        if: ${{ github.event.inputs.simulate != 'true' }}
         id: package_unity
         run: |
           set -e
@@ -104,7 +104,7 @@ jobs:
 
       - name: Create mock Unity build artifact (simulate mode)
         id: package_unity_sim
-        if: ${{ github.event.inputs.simulate == true }}
+        if: ${{ github.event.inputs.simulate == 'true' }}
         run: |
           set -euxo pipefail
           OUT="mate-engine-unity-${{ steps.vars.outputs.VERSION }}.tar.gz"
@@ -117,7 +117,7 @@ jobs:
           echo "unity_build_artifact=$OUT" >> $GITHUB_OUTPUT
 
       - name: Build plugins package
-        if: ${{ github.event.inputs.simulate != true }}
+        if: ${{ github.event.inputs.simulate != 'true' }}
         run: |
           set -e
           if [ -x ./scripts/build_plugins.sh ]; then
