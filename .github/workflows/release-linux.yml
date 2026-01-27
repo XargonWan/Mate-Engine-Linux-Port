@@ -54,9 +54,12 @@ jobs:
         run: |
           set -e
           if [ -z "${{ github.event.inputs.unity_version }}" ]; then echo "unity_version workflow input is required"; exit 1; fi
-          if [ -z "${{ secrets.UNITY_LICENSE }}" ] || [ -z "${{ secrets.UNITY_SERIAL }}" ] || [ -z "${{ secrets.UNITY_EMAIL }}" ] || [ -z "${{ secrets.UNITY_PASSWORD }}" ]; then
-            echo "Unity license secrets are required for Unity build";
-            exit 1;
+            if [ -z "${UNITY_LICENSE}" ] && { [ -z "${UNITY_SERIAL}" ] || [ -z "${UNITY_EMAIL}" ] || [ -z "${UNITY_PASSWORD}" ]; }; then
+              echo "Unity license OR serial credentials (UNITY_SERIAL/UNITY_EMAIL/UNITY_PASSWORD) are required for Unity build";
+              exit 1;
+            fi
+              echo "Unity license secrets are required for Unity build";
+              exit 1;
           fi
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
