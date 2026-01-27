@@ -247,8 +247,6 @@ jobs:
           cat "$TMPBODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           rm -f "$TMPBODY"
-          echo "$BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Detect plugins archive
         id: plugins_archive
