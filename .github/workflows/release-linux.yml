@@ -17,7 +17,8 @@ on:
       simulate:
         description: 'If true, run in simulation mode: skip Unity builds and create mock artifacts.'
         required: false
-        default: 'false'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -57,7 +58,7 @@ jobs:
           exit 1
 
       - name: Run build
-        if: ${{ github.event.inputs.simulate != 'true' }}
+        if: ${{ github.event.inputs.simulate != true }}
         run: |
           set -e
           if [ -x ./build.sh ]; then
@@ -71,7 +72,7 @@ jobs:
           fi
 
       - name: Build Unity project
-        if: ${{ github.event.inputs.simulate != 'true' }}
+        if: ${{ github.event.inputs.simulate != true }}
         uses: game-ci/unity-builder@v4
         with:
           unityVersion: ${{ github.event.inputs.unity_version }}
@@ -86,7 +87,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
       - name: Package Unity build artifacts
-        if: ${{ github.event.inputs.simulate != 'true' }}
+        if: ${{ github.event.inputs.simulate != true }}
         id: package_unity
         run: |
           set -e
@@ -103,7 +104,7 @@ jobs:
 
       - name: Create mock Unity build artifact (simulate mode)
         id: package_unity_sim
-        if: ${{ github.event.inputs.simulate == 'true' }}
+        if: ${{ github.event.inputs.simulate == true }}
         run: |
           set -euxo pipefail
           OUT="mate-engine-unity-${{ steps.vars.outputs.VERSION }}.tar.gz"
@@ -116,7 +117,7 @@ jobs:
           echo "unity_build_artifact=$OUT" >> $GITHUB_OUTPUT
 
       - name: Build plugins package
-        if: ${{ github.event.inputs.simulate != 'true' }}
+        if: ${{ github.event.inputs.simulate != true }}
         run: |
           set -e
           if [ -x ./scripts/build_plugins.sh ]; then
@@ -236,49 +237,25 @@ jobs:
             echo "unity_artifact=" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create GitHub release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish release
+        id: publish_release
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ steps.vars.outputs.TAG }}
-          release_name: ${{ steps.vars.outputs.TAG }}
+          tag: ${{ steps.vars.outputs.TAG }}
+          name: ${{ steps.vars.outputs.TAG }}
           body: "Release ${{ steps.vars.outputs.TAG }} created by workflow."
+          artifacts: |
+            mate-engine-unity-*.tar.gz
+            mate-engine-linux-*.tar.gz
+            dist/plugins-*.tar.gz
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          makeLatest: true
           draft: false
-          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Unity build artifact (if any)
-        if: ${{ steps.select_unity_artifact.outputs.unity_artifact != '' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.select_unity_artifact.outputs.unity_artifact }}
-          asset_name: ${{ steps.select_unity_artifact.outputs.unity_artifact }}
-          asset_content_type: application/gzip
 
-      - name: Upload release asset (tarball)
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.package_release.outputs.tarball }}
-          asset_name: ${{ steps.package_release.outputs.tarball }}
-          asset_content_type: application/gzip
 
-      - name: Upload plugins archive (if any)
-        if: ${{ steps.plugins_archive.outputs.archive != '' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.plugins_archive.outputs.archive }}
-          asset_name: ${{ steps.plugins_archive.outputs.archive }}
-          asset_content_type: application/gzip
 
       - name: Output release info
         run: |
