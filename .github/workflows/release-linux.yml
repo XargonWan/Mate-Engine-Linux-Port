@@ -296,9 +296,6 @@ jobs:
           draft: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-
-
-
       - name: Output release info
         run: |
           echo "Release created: tag=${{ steps.vars.outputs.TAG }}"
