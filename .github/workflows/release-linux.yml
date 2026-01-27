@@ -1,0 +1,162 @@
+name: Create Linux Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g. 1.2.3)'
+        required: true
+        default: '0.0.0'
+      tag:
+        description: 'Git tag to create (if empty use v{version})'
+        required: false
+      unity_version:
+        description: 'Unity Editor version to use for CI (e.g. 2021.3.31f1). Required for building MateEngineX.'
+        required: true
+permissions:
+  contents: write
+
+jobs:
+  build_and_release:
+    name: Build and create release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up variables
+        id: vars
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          TAG=${{ github.event.inputs.tag }}
+          if [ -z "$TAG" ]; then TAG="v${VERSION}"; fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Run build
+        run: |
+          set -e
+          if [ -x ./build.sh ]; then
+            echo "Running ./build.sh"
+            ./build.sh
+          elif [ -x ./scripts/build.sh ]; then
+            echo "Running ./scripts/build.sh"
+            ./scripts/build.sh
+          else
+            echo "No build script found; skipping build"
+          fi
+
+      - name: Pre-check Unity CI inputs
+        run: |
+          set -e
+          if [ -z "${{ github.event.inputs.unity_version }}" ]; then echo "unity_version workflow input is required"; exit 1; fi
+          if [ -z "${UNITY_LICENSE}" ]; then echo "Missing UNITY_LICENSE secret; add UNITY_LICENSE to repository secrets"; exit 1; fi
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Build Unity project
+        uses: game-ci/unity-builder@v2
+        with:
+          unityVersion: ${{ github.event.inputs.unity_version }}
+          projectPath: .
+          targetPlatform: Linux
+          buildName: MateEngineX
+          buildsPath: build/unity
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+
+      - name: Package Unity build artifacts
+        id: package_unity
+        run: |
+          set -e
+          BUILD_DIR=build/unity
+          if [ -d "$BUILD_DIR" ]; then
+            OUT="mate-engine-unity-${{ steps.vars.outputs.VERSION }}.tar.gz"
+            echo "Packaging Unity build from $BUILD_DIR -> $OUT"
+            tar -C "$BUILD_DIR" -czf "$OUT" .
+            ls -lh "$OUT"
+            echo "unity_build_artifact=$OUT" >> $GITHUB_OUTPUT
+          else
+            echo "No Unity build artifacts found in $BUILD_DIR"; exit 2
+          fi
+
+      - name: Build plugins package
+        run: |
+          set -e
+          if [ -x ./scripts/build_plugins.sh ]; then
+            ./scripts/build_plugins.sh
+          else
+            echo "No plugins build script found; skipping"
+          fi
+
+      - name: Create release tarball
+        id: package_release
+        run: |
+          set -e
+          OUT_NAME="mate-engine-linux-${{ steps.vars.outputs.VERSION }}.tar.gz"
+          echo "Creating tarball $OUT_NAME"
+          # Exclude git metadata and large directories you don't want in release
+          tar --exclude='.git' --exclude='Library' --exclude='Temp' --exclude='Logs' --exclude='.vs' -czf "$OUT_NAME" .
+          ls -lh "$OUT_NAME"
+          echo "tarball=$OUT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Detect plugins archive
+        id: plugins_archive
+        run: |
+          set -e
+          OUT_DIR=dist
+          if [ -d "$OUT_DIR" ]; then
+            for f in "$OUT_DIR"/plugins-*.tar.gz; do
+              if [ -f "$f" ]; then
+                echo "Found plugins archive: $f"
+                echo "archive=$f" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            done
+          fi
+          echo "No plugins archive found"
+          echo "archive=" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ steps.vars.outputs.TAG }}
+          release_name: ${{ steps.vars.outputs.TAG }}
+          body: "Release ${{ steps.vars.outputs.TAG }} created by workflow."
+          draft: false
+          prerelease: false
+
+      - name: Upload Unity build artifact (if any)
+        if: ${{ steps.package_unity.outputs.unity_build_artifact != '' }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.package_unity.outputs.unity_build_artifact }}
+          asset_name: ${{ steps.package_unity.outputs.unity_build_artifact }}
+          asset_content_type: application/gzip
+
+      - name: Upload release asset (tarball)
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.package_release.outputs.tarball }}
+          asset_name: ${{ steps.package_release.outputs.tarball }}
+          asset_content_type: application/gzip
+
+      - name: Upload plugins archive (if any)
+        if: ${{ steps.plugins_archive.outputs.archive != '' }}
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.plugins_archive.outputs.archive }}
+          asset_name: ${{ steps.plugins_archive.outputs.archive }}
+          asset_content_type: application/gzip
+
+      - name: Output release info
+        run: |
+          echo "Release created: tag=${{ steps.vars.outputs.TAG }}"
+          echo "Asset: ${{ steps.package_release.outputs.tarball }}"
