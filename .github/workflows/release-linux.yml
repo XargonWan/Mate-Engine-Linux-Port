@@ -14,6 +14,10 @@ on:
         description: 'Unity Editor version to use for CI (e.g. 2021.3.31f1). Required for building MateEngineX.'
         required: false
         default: 'auto'
+      simulate:
+        description: 'If true, run in simulation mode: skip Unity builds and create mock artifacts.'
+        required: false
+        default: 'false'
 
 permissions:
   contents: write
@@ -53,6 +57,7 @@ jobs:
           exit 1
 
       - name: Run build
+        if: ${{ github.event.inputs.simulate != 'true' }}
         run: |
           set -e
           if [ -x ./build.sh ]; then
@@ -66,6 +71,7 @@ jobs:
           fi
 
       - name: Build Unity project
+        if: ${{ github.event.inputs.simulate != 'true' }}
         uses: game-ci/unity-builder@v4
         with:
           unityVersion: ${{ github.event.inputs.unity_version }}
@@ -80,6 +86,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
       - name: Package Unity build artifacts
+        if: ${{ github.event.inputs.simulate != 'true' }}
         id: package_unity
         run: |
           set -e
@@ -94,7 +101,22 @@ jobs:
             echo "No Unity build artifacts found in $BUILD_DIR"; exit 2
           fi
 
+      - name: Create mock Unity build artifact (simulate mode)
+        id: package_unity_sim
+        if: ${{ github.event.inputs.simulate == 'true' }}
+        run: |
+          set -euxo pipefail
+          OUT="mate-engine-unity-${{ steps.vars.outputs.VERSION }}.tar.gz"
+          echo "Creating mock Unity build artifact $OUT"
+          TMPDIR=$(mktemp -d)
+          mkdir -p "$TMPDIR"/unity
+          echo "Mock Unity build for $OUT" > "$TMPDIR"/unity/README.txt
+          tar -C "$TMPDIR"/unity -czf "$OUT" .
+          ls -lh "$OUT"
+          echo "unity_build_artifact=$OUT" >> $GITHUB_OUTPUT
+
       - name: Build plugins package
+        if: ${{ github.event.inputs.simulate != 'true' }}
         run: |
           set -e
           if [ -x ./scripts/build_plugins.sh ]; then
@@ -114,8 +136,11 @@ jobs:
           echo "Staging in $TMPDIR"
 
           # If the Unity build artifact exists and looks like a tar, extract it to preserve runtime layout
-          if [ -n "${{ steps.package_unity.outputs.unity_build_artifact }}" ] && [ -f "${{ steps.package_unity.outputs.unity_build_artifact }}" ]; then
-            UNITY_ART="${{ steps.package_unity.outputs.unity_build_artifact }}"
+          UNITY_ART="${{ steps.package_unity.outputs.unity_build_artifact }}"
+          if [ -z "$UNITY_ART" ] && [ -n "${{ steps.package_unity_sim.outputs.unity_build_artifact }}" ]; then
+            UNITY_ART="${{ steps.package_unity_sim.outputs.unity_build_artifact }}"
+          fi
+          if [ -n "$UNITY_ART" ] && [ -f "$UNITY_ART" ]; then
             echo "Found Unity artifact: $UNITY_ART"
             if [[ "$UNITY_ART" == *.tar.gz ]] || [[ "$UNITY_ART" == *.tgz ]]; then
               echo "Extracting Unity artifact into staging area"
@@ -200,6 +225,17 @@ jobs:
           echo "No plugins archive found"
           echo "archive=" >> $GITHUB_OUTPUT
 
+      - name: Select unity artifact (supports simulation)
+        id: select_unity_artifact
+        run: |
+          if [ -n "${{ steps.package_unity.outputs.unity_build_artifact }}" ]; then
+            echo "unity_artifact=${{ steps.package_unity.outputs.unity_build_artifact }}" >> $GITHUB_OUTPUT
+          elif [ -n "${{ steps.package_unity_sim.outputs.unity_build_artifact }}" ]; then
+            echo "unity_artifact=${{ steps.package_unity_sim.outputs.unity_build_artifact }}" >> $GITHUB_OUTPUT
+          else
+            echo "unity_artifact=" >> $GITHUB_OUTPUT
+          fi
+
       - name: Create GitHub release
         id: create_release
         uses: actions/create-release@v1
@@ -213,16 +249,20 @@ jobs:
           prerelease: false
 
       - name: Upload Unity build artifact (if any)
-        if: ${{ steps.package_unity.outputs.unity_build_artifact != '' }}
+        if: ${{ steps.select_unity_artifact.outputs.unity_artifact != '' }}
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.package_unity.outputs.unity_build_artifact }}
-          asset_name: ${{ steps.package_unity.outputs.unity_build_artifact }}
+          asset_path: ${{ steps.select_unity_artifact.outputs.unity_artifact }}
+          asset_name: ${{ steps.select_unity_artifact.outputs.unity_artifact }}
           asset_content_type: application/gzip
 
       - name: Upload release asset (tarball)
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.package_release.outputs.tarball }}
@@ -232,6 +272,8 @@ jobs:
       - name: Upload plugins archive (if any)
         if: ${{ steps.plugins_archive.outputs.archive != '' }}
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.plugins_archive.outputs.archive }}
