@@ -38,6 +38,39 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
+      - name: Validate unity_version input
+        run: |
+          UV="${{ github.event.inputs.unity_version }}"
+          if [ -z "$UV" ]; then
+            echo "unity_version input is required; provide 'auto' or a valid Unity version (e.g. 2021.3.31f1)."
+            exit 1
+          fi
+          if [ "$UV" = "auto" ]; then
+            echo "Using 'auto' Unity version detection (builder will detect a matching installed version)."
+            exit 0
+          fi
+          # Validate common Unity version patterns like 2021.3.31f1, 2020.3.45f1, 2022.2.0a1, 2022.1.0b1
+          if ! echo "$UV" | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+[abfp][0-9]+$' >/dev/null 2>&1; then
+            echo "Invalid unity_version format: $UV"
+            echo "Use 'auto' or a valid Unity version (e.g. 2021.3.31f1). See https://game.ci/docs/github/builder/#unityversion for details."
+            exit 1
+          fi
+          echo "unity_version $UV looks valid"
+
+      - name: Check Unity license secrets
+        run: |
+          # Ensure we have either UNITY_LICENSE or UNITY_SERIAL+UNITY_EMAIL+UNITY_PASSWORD
+          if [ -n "${{ secrets.UNITY_SERIAL }}" ] && [ -n "${{ secrets.UNITY_EMAIL }}" ] && [ -n "${{ secrets.UNITY_PASSWORD }}" ]; then
+            echo "UNITY_SERIAL credentials found; will use serial activation."
+            exit 0
+          fi
+          if [ -n "${{ secrets.UNITY_LICENSE }}" ]; then
+            echo "UNITY_LICENSE found; will use license file activation."
+            exit 0
+          fi
+          echo "Unity license secrets are missing. Provide either UNITY_LICENSE or UNITY_SERIAL + UNITY_EMAIL + UNITY_PASSWORD."
+          exit 1
+
       - name: Run build
         run: |
           set -e
@@ -50,23 +83,6 @@ jobs:
           else
             echo "No build script found; skipping build"
           fi
-
-      # - name: Pre-check Unity CI inputs
-      #   run: |
-      #     set -e
-      #     if [ -z "${{ github.event.inputs.unity_version }}" ]; then echo "unity_version workflow input is required"; exit 1; fi
-      #       if [ -z "${UNITY_LICENSE}" ] && { [ -z "${UNITY_SERIAL}" ] || [ -z "${UNITY_EMAIL}" ] || [ -z "${UNITY_PASSWORD}" ]; }; then
-      #         echo "Unity license OR serial credentials (UNITY_SERIAL/UNITY_EMAIL/UNITY_PASSWORD) are required for Unity build";
-      #         exit 1;
-      #       fi
-      #         echo "Unity license secrets are required for Unity build";
-      #         exit 1;
-      #     fi
-        # env:
-        #   UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        #   UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
-        #   UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-        #   UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
 
       - name: Build Unity project
         uses: game-ci/unity-builder@v2
