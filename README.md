@@ -14,7 +14,9 @@
 
 # Mate-Engine-Linux-Port
 This is an **unofficial** Linux port of shinyflvre's MateEngine - A free Desktop Mate alternative with a lightweight interface and custom VRM support.
-Tested on Ubuntu 24.04 LTS.
+Tested on:
+- Ubuntu 24.04 LTS.
+- Fedora Workstation 43 (Plasma)
 
 ![](https://raw.githubusercontent.com/Marksonthegamer/Mate-Engine-Linux-Port/refs/heads/main/Screenshot.png)
 
@@ -23,7 +25,7 @@ Simply grab a prebuilt one in [Releases](https://github.com/Marksonthegamer/Mate
 
 ### Requirements
 - A common GNU/Linux distro
-- A common X11 desktop environment which supports compositing (such as KDE, Xfce, GNOME, etc.)
+- A common X11 or Wayland desktop environment which supports compositing (such as KDE, Xfce, GNOME)
 - At least 1 GiB of swap space (optional)
 - `libpulse` and `pipewire-pulse` (if you are using Pipewire as audio server)
 - `libgtk-3-dev libglib2.0-dev libayatana-appindicator`
@@ -69,6 +71,7 @@ Note that if you use GNOME, you will need [AppIndicator and KStatusNotifierItem 
 - Limited window moving in Mutter (GNOME)
 - PulseAudio sometimes returns an empty audio program name
 - Mods do not load correctly
+- Sometimes is hard to focus the Mate or its menu via mouse control
 
 ### Removed
 - Steam API (no workshop support)
