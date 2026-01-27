@@ -38,25 +38,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
-      - name: Validate unity_version input
-        run: |
-          UV="${{ github.event.inputs.unity_version }}"
-          if [ -z "$UV" ]; then
-            echo "unity_version input is required; provide 'auto' or a valid Unity version (e.g. 2021.3.31f1)."
-            exit 1
-          fi
-          if [ "$UV" = "auto" ]; then
-            echo "Using 'auto' Unity version detection (builder will detect a matching installed version)."
-            exit 0
-          fi
-          # Validate common Unity version patterns like 2021.3.31f1, 2020.3.45f1, 2022.2.0a1, 2022.1.0b1
-          if ! echo "$UV" | grep -E '^[0-9]{4}\.[0-9]+\.[0-9]+[abfp][0-9]+$' >/dev/null 2>&1; then
-            echo "Invalid unity_version format: $UV"
-            echo "Use 'auto' or a valid Unity version (e.g. 2021.3.31f1). See https://game.ci/docs/github/builder/#unityversion for details."
-            exit 1
-          fi
-          echo "unity_version $UV looks valid"
-
       - name: Check Unity license secrets
         run: |
           # Ensure we have either UNITY_LICENSE or UNITY_SERIAL+UNITY_EMAIL+UNITY_PASSWORD
