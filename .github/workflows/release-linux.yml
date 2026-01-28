@@ -1,12 +1,24 @@
 name: Create Linux Release
 
 on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**/*.md'
+      - 'README'
+      - 'README.*'
+      - 'LICENSE'
+      - 'LICENSE.*'
+      - '.gitignore'
+      - '.gitattributes'
+      - '.editorconfig'
+      - 'docs/**'
   workflow_dispatch:
     inputs:
       version:
         description: 'Release version (e.g. 1.2.3)'
-        required: true
-        default: '0.0.0'
+        required: false
       tag:
         description: 'Git tag to create (if empty use v{version})'
         required: false
@@ -39,9 +51,16 @@ jobs:
         run: |
           VERSION=${{ github.event.inputs.version }}
           TAG=${{ github.event.inputs.tag }}
+          UNITY_VERSION=${{ github.event.inputs.unity_version }}
+
+          if [ -z "$VERSION" ]; then
+            VERSION=$(git rev-parse --short=7 HEAD)
+          fi
           if [ -z "$TAG" ]; then TAG="v${VERSION}"; fi
+          if [ -z "$UNITY_VERSION" ]; then UNITY_VERSION="auto"; fi
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "UNITY_VERSION=$UNITY_VERSION" >> $GITHUB_OUTPUT
 
       - name: Check Unity license secrets
         run: |
@@ -75,7 +94,7 @@ jobs:
         if: ${{ github.event.inputs.simulate != 'true' }}
         uses: game-ci/unity-builder@v4
         with:
-          unityVersion: ${{ github.event.inputs.unity_version }}
+          unityVersion: ${{ steps.vars.outputs.UNITY_VERSION }}
           projectPath: .
           targetPlatform: StandaloneLinux64
           buildName: MateEngineX
@@ -125,6 +144,23 @@ jobs:
           else
             echo "No plugins build script found; skipping"
           fi
+
+      - name: Detect plugins archive
+        id: plugins_archive
+        run: |
+          set -e
+          OUT_DIR=dist
+          if [ -d "$OUT_DIR" ]; then
+            for f in "$OUT_DIR"/plugins-*.tar.gz; do
+              if [ -f "$f" ]; then
+                echo "Found plugins archive: $f"
+                echo "archive=$f" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            done
+          fi
+          echo "No plugins archive found"
+          echo "archive=" >> $GITHUB_OUTPUT
 
       - name: Create release tarball
         id: package_release
@@ -266,23 +302,6 @@ jobs:
           cat "$TMPBODY" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           rm -f "$TMPBODY"
-
-      - name: Detect plugins archive
-        id: plugins_archive
-        run: |
-          set -e
-          OUT_DIR=dist
-          if [ -d "$OUT_DIR" ]; then
-            for f in "$OUT_DIR"/plugins-*.tar.gz; do
-              if [ -f "$f" ]; then
-                echo "Found plugins archive: $f"
-                echo "archive=$f" >> $GITHUB_OUTPUT
-                exit 0
-              fi
-            done
-          fi
-          echo "No plugins archive found"
-          echo "archive=" >> $GITHUB_OUTPUT
 
       - name: Select unity artifact (supports simulation)
         id: select_unity_artifact
