@@ -172,6 +172,10 @@ public class SaveLoadHandler : MonoBehaviour
         public string selectedModelPath = "";
         public int contextLength = 4096;
         public bool enableHusbandoMode = false;
+
+        public bool enableSyntheticHeart = true;
+        public bool showSyntheticHeartOverlay = true;
+        public string syntheticHeartBaseUrl = "http://localhost:11434";
         
         [JsonProperty("useXMoveWindow")]
         public bool useLegacyMoveResizeCalls = false;
