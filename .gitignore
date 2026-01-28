@@ -21,6 +21,7 @@ Assets/ExportedModel
 
 # Unity auto-generated files
 sysinfo.txt
+.blob
 
 # Crash logs
 *.stacktrace
