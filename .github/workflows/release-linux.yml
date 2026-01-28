@@ -216,6 +216,12 @@ jobs:
             mv "$TMPDIR/MateEngineX" "$TMPDIR/MateEngineX.x86_64"
           fi
 
+          # Exclude debug-only folder from release
+          if [ -d "$TMPDIR/MateEngineX_BurstDebugInformation_DoNotShip" ]; then
+            echo "Removing MateEngineX_BurstDebugInformation_DoNotShip from staging"
+            rm -rf "$TMPDIR/MateEngineX_BurstDebugInformation_DoNotShip"
+          fi
+
           # Validate required runtime layout
           if [ ! -f "$TMPDIR/MateEngineX.x86_64" ]; then
             echo "ERROR: Missing MateEngineX.x86_64 in staging. Unity build artifact did not provide the executable."
