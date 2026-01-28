@@ -1,12 +1,16 @@
 using System;
 using System.Collections;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using UnityEngine.Scripting;
 
+[Preserve]
 public class SyntheticHeartOverlay : MonoBehaviour
 {
     private const string OverlayRootName = "SyntheticHeartOverlayRoot";
+    private const string MarkerRelativePath = "Mods/SyntheticHeart/enabled.json";
 
     private Canvas overlayCanvas;
     private GameObject buttonRoot;
@@ -16,15 +20,33 @@ public class SyntheticHeartOverlay : MonoBehaviour
     private Toggle showToggle;
     private InputField baseUrlField;
 
+    [Preserve]
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
+        if (!IsSyntheticHeartEnabled())
+            return;
+
         if (FindFirstObjectByType<SyntheticHeartOverlay>() != null)
             return;
 
         var root = new GameObject(OverlayRootName);
         DontDestroyOnLoad(root);
         root.AddComponent<SyntheticHeartOverlay>();
+    }
+
+    private static bool IsSyntheticHeartEnabled()
+    {
+        try
+        {
+            var markerPath = Path.Combine(Application.streamingAssetsPath, MarkerRelativePath);
+            return File.Exists(markerPath);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[SyntheticHeartOverlay] Unable to read marker file: {ex}");
+            return false;
+        }
     }
 
     private void Start()
