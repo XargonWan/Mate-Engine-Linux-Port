@@ -153,6 +153,23 @@ jobs:
             fi
           fi
 
+          # Normalize staging layout to match official runtime structure
+          # If the Unity build is nested under StandaloneLinux64 (or a single top folder), flatten it.
+          if [ -d "$TMPDIR/StandaloneLinux64" ] && [ ! -d "$TMPDIR/MateEngineX_Data" ]; then
+            echo "Flattening StandaloneLinux64 into staging root"
+            cp -a "$TMPDIR/StandaloneLinux64/." "$TMPDIR/"
+            rm -rf "$TMPDIR/StandaloneLinux64"
+          fi
+          TOP_DIR_COUNT=$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+          if [ "$TOP_DIR_COUNT" = "1" ] && [ ! -d "$TMPDIR/MateEngineX_Data" ]; then
+            TOP_DIR=$(find "$TMPDIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            if [ -d "$TOP_DIR" ]; then
+              echo "Flattening top-level folder $(basename "$TOP_DIR") into staging root"
+              cp -a "$TOP_DIR/." "$TMPDIR/"
+              rm -rf "$TOP_DIR"
+            fi
+          fi
+
           # If plugins archive exists, extract it and merge plugin files into staging
           if [ -n "${{ steps.plugins_archive.outputs.archive }}" ] && [ -f "${{ steps.plugins_archive.outputs.archive }}" ]; then
             PLUG_ARCH="${{ steps.plugins_archive.outputs.archive }}"
@@ -185,15 +202,6 @@ jobs:
             cp -a "Plugins/Synthetic_Heart/." "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart/"
           fi
 
-          # Add essential metadata & helper files (README, LICENSE, launch.sh)
-          mkdir -p "$TMPDIR/meta"
-          for f in README.md LICENSE launch.sh; do
-            if [ -f "$f" ]; then
-              cp "$f" "$TMPDIR/meta/"
-              echo "Included $f"
-            fi
-          done
-
           # If the extracted Unity artifact didn't produce an executable layout, include known runtime files if present in repo root
           for f in MateEngineX.x86_64 UnityPlayer.so launch.sh; do
             if [ -f "$f" ] && [ ! -f "$TMPDIR/$f" ]; then
@@ -201,6 +209,16 @@ jobs:
               cp "$f" "$TMPDIR/"
             fi
           done
+
+          # Validate required runtime layout
+          if [ ! -f "$TMPDIR/MateEngineX.x86_64" ]; then
+            echo "ERROR: Missing MateEngineX.x86_64 in staging. Unity build artifact did not provide the executable."
+            exit 3
+          fi
+          if [ ! -d "$TMPDIR/MateEngineX_Data" ]; then
+            echo "ERROR: Missing MateEngineX_Data in staging. Unity build artifact did not provide runtime data."
+            exit 4
+          fi
 
           # Finalize tarball
           tar -C "$TMPDIR" -czf "$OUT_NAME" .
