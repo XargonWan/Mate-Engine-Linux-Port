@@ -210,6 +210,12 @@ jobs:
             fi
           done
 
+          # Normalize executable name to match launcher expectations (MateEngineX.x86_64)
+          if [ ! -f "$TMPDIR/MateEngineX.x86_64" ] && [ -f "$TMPDIR/MateEngineX" ]; then
+            echo "Renaming MateEngineX -> MateEngineX.x86_64"
+            mv "$TMPDIR/MateEngineX" "$TMPDIR/MateEngineX.x86_64"
+          fi
+
           # Validate required runtime layout
           if [ ! -f "$TMPDIR/MateEngineX.x86_64" ]; then
             echo "ERROR: Missing MateEngineX.x86_64 in staging. Unity build artifact did not provide the executable."
