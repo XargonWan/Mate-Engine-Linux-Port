@@ -52,6 +52,11 @@ jobs:
           VERSION=${{ github.event.inputs.version }}
           TAG=${{ github.event.inputs.tag }}
           UNITY_VERSION=${{ github.event.inputs.unity_version }}
+          MAKE_LATEST=true
+
+          if [ -z "$VERSION" ]; then
+            MAKE_LATEST=false
+          fi
 
           if [ -z "$VERSION" ]; then
             VERSION=$(git rev-parse --short=7 HEAD)
@@ -61,6 +66,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           echo "UNITY_VERSION=$UNITY_VERSION" >> $GITHUB_OUTPUT
+          echo "MAKE_LATEST=$MAKE_LATEST" >> $GITHUB_OUTPUT
 
       - name: Check Unity license secrets
         run: |
@@ -325,7 +331,7 @@ jobs:
             MateEngineX_*.tar.gz
           allowUpdates: true
           omitBodyDuringUpdate: true
-          makeLatest: true
+          makeLatest: ${{ steps.vars.outputs.MAKE_LATEST }}
           draft: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
