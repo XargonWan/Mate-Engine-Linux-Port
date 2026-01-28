@@ -192,15 +192,7 @@ jobs:
             fi
           fi
 
-          # If the repo contains a local integration plugin copy it into both Plugins/ and StreamingAssets/Mods for runtime
-          if [ -d "Plugins/Synthetic_Heart" ]; then
-            echo "Including local Plugins/Synthetic_Heart into runtime layout"
-            mkdir -p "$TMPDIR/Plugins/Synthetic_Heart"
-            cp -a "Plugins/Synthetic_Heart/." "$TMPDIR/Plugins/Synthetic_Heart/"
-
-            mkdir -p "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart"
-            cp -a "Plugins/Synthetic_Heart/." "$TMPDIR/MateEngineX_Data/StreamingAssets/Mods/Synthetic_Heart/"
-          fi
+          # Do not ship Synthetic_Heart plugin source files; integration is compiled into the build.
 
           # If the extracted Unity artifact didn't produce an executable layout, include known runtime files if present in repo root
           for f in MateEngineX.x86_64 UnityPlayer.so launch.sh; do
